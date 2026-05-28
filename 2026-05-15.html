@@ -1,0 +1,1791 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>三角洲行动 · 用户声音日报 2026-05-15</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/echarts/5.5.0/echarts.min.js"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        :root {
+            --bg-primary: #0D1117; --bg-secondary: #161B22; --bg-card: #1C2128; --bg-hover: #252C35;
+            --border: #30363D; --text-primary: #E6EDF3; --text-secondary: #8B949E; --text-muted: #6E7681;
+            --accent-blue: #58A6FF; --accent-green: #3FB950; --accent-red: #F85149; --accent-amber: #D29922;
+            --accent-purple: #BC8CFF; --accent-cyan: #39D2C0;
+        }
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans SC", sans-serif; background: var(--bg-primary); color: var(--text-primary); line-height: 1.6; font-size: 14px; }
+        .container { max-width: 1400px; margin: 0 auto; padding: 20px; }
+        .header { display: flex; align-items: center; justify-content: space-between; padding: 24px 0; border-bottom: 1px solid var(--border); margin-bottom: 24px; }
+        .header h1 { font-size: 22px; font-weight: 600; }
+        .header h1 span { color: var(--accent-blue); }
+        .header .date-info { color: var(--text-secondary); font-size: 13px; }
+        .header .date-info strong { color: var(--text-primary); font-size: 15px; }
+        .metrics-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 24px; }
+        .metric-card { background: var(--bg-card); border-radius: 10px; padding: 20px; border: 1px solid var(--border); position: relative; }
+        .metric-card .label { color: var(--text-secondary); font-size: 12px; margin-bottom: 8px; text-transform: uppercase; letter-spacing: 0.5px; display: inline-flex; align-items: center; gap: 6px; }
+        .metric-card .value { font-size: 28px; font-weight: 600; }
+        .metric-card .change { font-size: 12px; margin-top: 4px; }
+        .metric-card .change.up { color: var(--accent-red); }
+        .metric-card .change.down { color: var(--accent-green); }
+        .metric-card.total .value { color: var(--accent-blue); }
+        .metric-card.positive .value { color: var(--accent-green); }
+        .metric-card.negative .value { color: var(--accent-red); }
+        .metric-card.alert .value { color: var(--accent-amber); }
+        /* 预警说明角标 */
+        .info-badge { display: inline-flex; align-items: center; justify-content: center; width: 16px; height: 16px; border-radius: 50%; background: var(--bg-hover); color: var(--text-secondary); font-size: 10px; cursor: help; font-weight: 700; font-style: normal; line-height: 1; border: 1px solid var(--border); transition: all 0.2s; }
+        .info-badge:hover { background: var(--accent-blue); color: #fff; border-color: var(--accent-blue); }
+        .info-tooltip { display: none; position: absolute; top: 100%; right: 0; margin-top: 8px; background: var(--bg-secondary); border: 1px solid var(--border); border-radius: 8px; padding: 14px 16px; font-size: 12px; color: var(--text-secondary); line-height: 1.8; z-index: 100; width: 320px; box-shadow: 0 8px 24px rgba(0,0,0,0.4); }
+        .info-tooltip.show { display: block; }
+        .info-tooltip h4 { color: var(--text-primary); font-size: 13px; margin-bottom: 6px; }
+        .info-tooltip ul { padding-left: 16px; }
+        .info-tooltip li { margin-bottom: 2px; }
+        .info-tooltip .severity-high { color: var(--accent-red); }
+        .info-tooltip .severity-medium { color: var(--accent-amber); }
+        .info-tooltip .severity-low { color: var(--accent-blue); }
+        .charts-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 24px; }
+        .chart-card { background: var(--bg-card); border-radius: 10px; padding: 20px; border: 1px solid var(--border); }
+        .chart-card h3 { font-size: 14px; font-weight: 500; margin-bottom: 12px; color: var(--text-secondary); }
+        /* 标签分布板块 */
+        .section-title { font-size: 16px; font-weight: 600; margin-bottom: 16px; display: flex; align-items: center; gap: 8px; }
+        .section-title .section-icon { width: 4px; height: 18px; border-radius: 2px; background: var(--accent-blue); }
+        .tag-distribution { margin-bottom: 24px; }
+        .tag-cards { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+        .tag-card { background: var(--bg-card); border-radius: 8px; border: 1px solid var(--border); overflow: hidden; transition: border-color 0.2s; }
+        .tag-card:hover { border-color: var(--accent-blue); }
+        .tag-card-header { display: flex; align-items: center; justify-content: space-between; padding: 12px 16px; cursor: pointer; user-select: none; transition: background 0.2s; }
+        .tag-card-header:hover { background: var(--bg-hover); }
+        .tag-card-left { display: flex; align-items: center; gap: 10px; }
+        .tag-card-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+        .tag-card-name { font-size: 14px; font-weight: 500; color: var(--text-primary); }
+        .tag-card-count { font-size: 12px; color: var(--accent-blue); background: rgba(88,166,255,0.1); padding: 2px 8px; border-radius: 10px; }
+        .tag-card-right { display: flex; align-items: center; gap: 10px; }
+        .tag-card-sentiment-mini { display: flex; gap: 4px; font-size: 11px; }
+        .mini-pos { color: var(--accent-green); background: rgba(63,185,80,0.1); padding: 1px 6px; border-radius: 3px; }
+        .mini-neu { color: var(--text-secondary); background: rgba(139,148,158,0.1); padding: 1px 6px; border-radius: 3px; }
+        .mini-neg { color: var(--accent-red); background: rgba(248,81,73,0.1); padding: 1px 6px; border-radius: 3px; }
+        .tag-card-arrow { font-size: 12px; color: var(--text-muted); transition: transform 0.2s; }
+        .tag-card-arrow.open { transform: rotate(90deg); }
+        .tag-card-detail { border-top: 1px solid var(--border); padding: 0; max-height: 400px; overflow-y: auto; }
+        .tag-detail-item { display: flex; align-items: flex-start; gap: 6px; padding: 10px 16px; border-bottom: 1px solid var(--border); font-size: 13px; line-height: 1.5; transition: background 0.15s; }
+        .tag-detail-item:last-child { border-bottom: none; }
+        .tag-detail-item:hover { background: var(--bg-hover); }
+        .tag-detail-sentiment { flex-shrink: 0; font-size: 10px; line-height: 1.5; }
+        .tag-detail-source { color: var(--accent-cyan); flex-shrink: 0; font-weight: 500; }
+        .tag-detail-title { color: var(--text-primary); text-decoration: none; }
+        .tag-detail-title:hover { color: var(--accent-blue); }
+        .tag-detail-summary { color: var(--text-muted); font-size: 12px; }
+        /* 每日总结板块 */
+        .daily-summary { background: var(--bg-card); border-radius: 10px; padding: 20px 24px; border: 1px solid var(--border); margin-bottom: 24px; }
+        .daily-summary .summary-title { font-size: 15px; font-weight: 600; margin-bottom: 12px; display: flex; align-items: center; gap: 8px; color: var(--accent-cyan); }
+        .daily-summary .summary-title .summary-icon { font-size: 18px; }
+        .daily-summary .summary-text { font-size: 14px; color: var(--text-secondary); line-height: 2; }
+        .alerts-section { margin-bottom: 24px; }
+        .alert-item { background: var(--bg-card); border-radius: 8px; padding: 14px 18px; border-left: 3px solid var(--accent-amber); margin-bottom: 8px; display: flex; align-items: center; gap: 10px; }
+        .alert-item.severity-high { border-left-color: var(--accent-red); }
+        .alert-item.severity-medium { border-left-color: var(--accent-amber); }
+        .alert-item.severity-low { border-left-color: var(--accent-blue); }
+        .alert-item .icon { font-size: 16px; }
+        .alert-item .msg { flex: 1; }
+        .channel-tabs { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 16px; }
+        .channel-tab { background: var(--bg-secondary); border: 1px solid var(--border); border-radius: 6px; padding: 8px 16px; cursor: pointer; font-size: 13px; color: var(--text-secondary); transition: all 0.2s; }
+        .channel-tab:hover { background: var(--bg-hover); color: var(--text-primary); }
+        .channel-tab.active { background: var(--accent-blue); color: #fff; border-color: var(--accent-blue); }
+        .channel-content { display: none; }
+        .channel-content.active { display: block; }
+        .channel-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; padding-bottom: 12px; border-bottom: 1px solid var(--border); }
+        .channel-header h2 { font-size: 16px; font-weight: 500; }
+        .channel-stats { display: flex; gap: 16px; font-size: 12px; color: var(--text-secondary); }
+        .post-item { background: var(--bg-card); border-radius: 8px; padding: 16px; border: 1px solid var(--border); margin-bottom: 10px; transition: border-color 0.2s; }
+        .post-item:hover { border-color: var(--accent-blue); }
+        .post-item .post-header { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 8px; }
+        .post-item .post-title { font-size: 14px; font-weight: 500; flex: 1; }
+        .post-item .post-title a { color: var(--text-primary); text-decoration: none; }
+        .post-item .post-title a:hover { color: var(--accent-blue); }
+        .post-item .post-sentiment { display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 11px; font-weight: 500; white-space: nowrap; }
+        .post-item .post-sentiment.positive { background: rgba(63,185,80,0.15); color: var(--accent-green); }
+        .post-item .post-sentiment.neutral { background: rgba(139,148,158,0.15); color: var(--text-secondary); }
+        .post-item .post-sentiment.negative { background: rgba(248,81,73,0.15); color: var(--accent-red); }
+        .post-item .post-summary { color: var(--text-secondary); font-size: 13px; margin-bottom: 10px; line-height: 1.5; }
+        .post-item .post-meta { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+        .post-item .post-tag { display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 11px; background: rgba(88,166,255,0.1); color: var(--accent-blue); }
+        .post-item .post-metric { font-size: 12px; color: var(--text-muted); }
+        .post-item .post-source { font-size: 12px; color: var(--accent-cyan); font-weight: 500; }
+        .post-item .post-url { font-size: 12px; color: var(--accent-blue); text-decoration: none; max-width: 300px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; display: inline-block; }
+        .post-item .post-url:hover { text-decoration: underline; }
+        .tag-change.up { color: var(--accent-red); }
+        .tag-change.down { color: var(--accent-green); }
+        .footer { margin-top: 40px; padding: 20px 0; border-top: 1px solid var(--border); color: var(--text-muted); font-size: 12px; text-align: center; }
+        .no-data { color: var(--text-muted); font-style: italic; padding: 20px; text-align: center; }
+        @media print { body { background: white; color: #222; } .metric-card, .chart-card, .post-item, .alert-item, .tag-card, .daily-summary { border: 1px solid #ddd; background: white; } }
+        @media (max-width: 768px) { .metrics-grid { grid-template-columns: repeat(2, 1fr); } .charts-row { grid-template-columns: 1fr; } .tag-cards { grid-template-columns: 1fr; } }
+    </style>
+</head>
+<body>
+<div class="container">
+    <div class="header">
+        <h1><span>Delta Force</span> · 用户声音日报</h1>
+        <div class="date-info"><strong>2026-05-15</strong><br>生成时间: 2026/5/15 18:06:38<br>数据覆盖: 2026-05-15 00:00 - 18:06</div>
+    </div>
+
+    <div class="metrics-grid">
+        <div class="metric-card total">
+            <div class="label">总声量</div>
+            <div class="value">72</div>
+            <div class="change ">首次采集</div>
+        </div>
+        <div class="metric-card positive">
+            <div class="label">正面声量</div>
+            <div class="value">20</div>
+            <div class="change">27.8%</div>
+        </div>
+        <div class="metric-card negative">
+            <div class="label">负面声量</div>
+            <div class="value">27</div>
+            <div class="change">37.5%</div>
+        </div>
+        <div class="metric-card alert">
+            <div class="label">预警项 <i class="info-badge" onclick="toggleAlertInfo(event)" title="查看预警定义">?</i>
+                <div class="info-tooltip" id="alertInfoTooltip">
+                    <h4>预警项定义</h4>
+                    <ul>
+                        <li><span class="severity-high">● 高等级</span>：负面声量较昨日增长 &gt;50%</li>
+                        <li><span class="severity-medium">● 中等级</span>：负面声量较昨日增长 30%-50%，或某标签讨论量较昨日增长 &gt;50%且&ge;3条</li>
+                        <li><span class="severity-low">● 低等级</span>：总声量较昨日下降 &gt;30%</li>
+                    </ul>
+                    <div style="margin-top:8px;color:var(--text-muted);">预警基于当日与昨日数据的同比变化自动计算</div>
+                </div>
+            </div>
+            <div class="value">0</div>
+            <div class="change">无异常</div>
+        </div>
+    </div>
+
+    <div class="charts-row">
+        <div class="chart-card"><h3>情绪分布</h3><div id="sentimentChart" style="height: 280px;"></div></div>
+        <div class="chart-card"><h3>声量趋势 (近7天)</h3><div id="trendChart" style="height: 280px;"></div></div>
+    </div>
+
+    <div class="tag-distribution">
+        <div class="section-title"><span class="section-icon"></span>标签分布</div>
+        <div class="tag-cards">
+            
+        <div class="tag-card" data-tag="设备优化">
+            <div class="tag-card-header" onclick="toggleTagDetail('设备优化')">
+                <div class="tag-card-left">
+                    <span class="tag-card-dot" style="background:#58A6FF"></span>
+                    <span class="tag-card-name">设备优化</span>
+                    <span class="tag-card-count">9条</span>
+                </div>
+                <div class="tag-card-right">
+                    <span class="tag-card-sentiment-mini">
+                        <span class="mini-pos" title="正面">2</span>
+                        <span class="mini-neu" title="中性">0</span>
+                        <span class="mini-neg" title="负面">7</span>
+                    </span>
+                    
+                    <span class="tag-card-arrow" id="arrow-设备优化">▸</span>
+                </div>
+            </div>
+            <div class="tag-card-detail" id="detail-设备优化" style="display:none;">
+                <div class="tag-detail-item">
+                <span class="tag-detail-sentiment">🔴</span>
+                <span class="tag-detail-source">[Steam]</span>
+                <a class="tag-detail-title" href="https://steamcommunity.com/profiles/76561198129863727/recommended/2507950" target="_blank">一点小bug都不能修，还推荐给别人玩，推荐给你妈玩玩看你妈会不会抽你俩大嘴巴子吧策划，跑刀多了杀2个人就要被踢，你是不是...</a>
+                <span class="tag-detail-summary"> — 一点小bug都不能修，还推荐给别人玩，推荐给你妈玩玩看你妈会不会抽你俩大嘴巴子吧策划，跑刀多了杀2个人就要被踢，你是不是畜生的时候是被踢出来的孤儿啊</span>
+            </div>
+<div class="tag-detail-item">
+                <span class="tag-detail-sentiment">🔴</span>
+                <span class="tag-detail-source">[Steam]</span>
+                <a class="tag-detail-title" href="https://steamcommunity.com/profiles/76561199447188771/recommended/2507950" target="_blank">辣鸡游戏优化差的一比，还有ACE扫盘给我电脑搞的卡的要死</a>
+                <span class="tag-detail-summary"> — 辣鸡游戏优化差的一比，还有ACE扫盘给我电脑搞的卡的要死</span>
+            </div>
+<div class="tag-detail-item">
+                <span class="tag-detail-sentiment">🔴</span>
+                <span class="tag-detail-source">[Steam]</span>
+                <a class="tag-detail-title" href="https://steamcommunity.com/profiles/76561198298743465/recommended/2507950" target="_blank">每次跟新后就闪退</a>
+                <span class="tag-detail-summary"> — 每次跟新后就闪退</span>
+            </div>
+<div class="tag-detail-item">
+                <span class="tag-detail-sentiment">🔴</span>
+                <span class="tag-detail-source">[Steam]</span>
+                <a class="tag-detail-title" href="https://steamcommunity.com/profiles/76561198443887580/recommended/2507950" target="_blank">经常闪退</a>
+                <span class="tag-detail-summary"> — 经常闪退</span>
+            </div>
+<div class="tag-detail-item">
+                <span class="tag-detail-sentiment">🔴</span>
+                <span class="tag-detail-source">[Steam]</span>
+                <a class="tag-detail-title" href="https://steamcommunity.com/profiles/76561198449014492/recommended/2507950" target="_blank">真几把服了，莫名其妙一直跳cpu虚拟化怎么弄都弄不好，腾讯你不会弄就不要弄，刚刚有点兴趣直接给我按死了，玩你家游戏就图的...</a>
+                <span class="tag-detail-summary"> — 真几把服了，莫名其妙一直跳cpu虚拟化怎么弄都弄不好，腾讯你不会弄就不要弄，刚刚有点兴趣直接给我按死了，玩你家游戏就图的一个服务器稳定人多，你他妈现在一会ace一会cpu还非要玩家自己弄，cnm的没做好优化就别拿出来强迫玩家自己弄，真的是体验差到不行</span>
+            </div>
+<div class="tag-detail-item">
+                <span class="tag-detail-sentiment">🟢</span>
+                <span class="tag-detail-source">[TapTap]</span>
+                <a class="tag-detail-title" href="https://www.taptap.cn/app/330259/review" target="_blank">干员技能配合与航天基地等地图的战术深度提供了较强的沉浸感，威龙等角色的操作手感及手机端优化也受到好评。在肯定战术博弈乐趣...</a>
+                <span class="tag-detail-summary"> — 干员技能配合与航天基地等地图的战术深度提供了较强的沉浸感，威龙等角色的操作手感及手机端优化也受到好评。在肯定战术博弈乐趣的同时，部分玩家对近期人机AI的强度表现以及机密模式下的物资爆率有所保留。</span>
+            </div>
+<div class="tag-detail-item">
+                <span class="tag-detail-sentiment">🔴</span>
+                <span class="tag-detail-source">[百度贴吧]</span>
+                <a class="tag-detail-title" href="https://tieba.baidu.com/f?kw=三角洲行动" target="_blank">匹配机制需要优化</a>
+                <span class="tag-detail-summary"> — 黄金段位匹配到王者对手，根本没法打</span>
+            </div>
+<div class="tag-detail-item">
+                <span class="tag-detail-sentiment">🟢</span>
+                <span class="tag-detail-source">[NGA]</span>
+                <a class="tag-detail-title" href="https://bbs.nga.cn/read.php?tid=sample1" target="_blank">官方听劝改了不少bug</a>
+                <span class="tag-detail-summary"> — 策划面对面之后确实修了很多问题，好评</span>
+            </div>
+<div class="tag-detail-item">
+                <span class="tag-detail-sentiment">🔴</span>
+                <span class="tag-detail-source">[抖音]</span>
+                <a class="tag-detail-title" href="https://v.douyin.com/sample3" target="_blank">三角洲手机版卡顿实测</a>
+                <span class="tag-detail-summary"> — 中端机实测帧率表现，优化确实需要加强</span>
+            </div>
+            </div>
+        </div>
+        <div class="tag-card" data-tag="匹配机制">
+            <div class="tag-card-header" onclick="toggleTagDetail('匹配机制')">
+                <div class="tag-card-left">
+                    <span class="tag-card-dot" style="background:#3FB950"></span>
+                    <span class="tag-card-name">匹配机制</span>
+                    <span class="tag-card-count">7条</span>
+                </div>
+                <div class="tag-card-right">
+                    <span class="tag-card-sentiment-mini">
+                        <span class="mini-pos" title="正面">1</span>
+                        <span class="mini-neu" title="中性">3</span>
+                        <span class="mini-neg" title="负面">3</span>
+                    </span>
+                    
+                    <span class="tag-card-arrow" id="arrow-匹配机制">▸</span>
+                </div>
+            </div>
+            <div class="tag-card-detail" id="detail-匹配机制" style="display:none;">
+                <div class="tag-detail-item">
+                <span class="tag-detail-sentiment">🔴</span>
+                <span class="tag-detail-source">[Steam]</span>
+                <a class="tag-detail-title" href="https://steamcommunity.com/profiles/76561198886397482/recommended/2507950" target="_blank">垃圾匹配机制</a>
+                <span class="tag-detail-summary"> — 垃圾匹配机制</span>
+            </div>
+<div class="tag-detail-item">
+                <span class="tag-detail-sentiment">🔴</span>
+                <span class="tag-detail-source">[百度贴吧]</span>
+                <a class="tag-detail-title" href="https://tieba.baidu.com/f?kw=三角洲行动" target="_blank">匹配机制需要优化</a>
+                <span class="tag-detail-summary"> — 黄金段位匹配到王者对手，根本没法打</span>
+            </div>
+<div class="tag-detail-item">
+                <span class="tag-detail-sentiment">⚪</span>
+                <span class="tag-detail-source">[百度贴吧]</span>
+                <a class="tag-detail-title" href="https://tieba.baidu.com/p/sample2" target="_blank">有没有人一起组队打排位</a>
+                <span class="tag-detail-summary"> — 钻石段位求固定队，每天晚上8-11点在线</span>
+            </div>
+<div class="tag-detail-item">
+                <span class="tag-detail-sentiment">⚪</span>
+                <span class="tag-detail-source">[QQ频道]</span>
+                <a class="tag-detail-title" href="https://pd.qq.com/s/dmtyes81b" target="_blank">找固定队友一起开黑</a>
+                <span class="tag-detail-summary"> — 本人钻石段位，找个固定队友每天晚上打</span>
+            </div>
+<div class="tag-detail-item">
+                <span class="tag-detail-sentiment">⚪</span>
+                <span class="tag-detail-source">[QQ频道]</span>
+                <a class="tag-detail-title" href="https://pd.qq.com/s/sample1" target="_blank">今晚有谁一起打排位赛</a>
+                <span class="tag-detail-summary"> — 缺一个辅助位，来个会玩的</span>
+            </div>
+<div class="tag-detail-item">
+                <span class="tag-detail-sentiment">🟢</span>
+                <span class="tag-detail-source">[QQ频道]</span>
+                <a class="tag-detail-title" href="https://pd.qq.com/s/sample2" target="_blank">新赛季排位上分攻略分享</a>
+                <span class="tag-detail-summary"> — 分享一套稳定上分的打法思路，亲测有效</span>
+            </div>
+<div class="tag-detail-item">
+                <span class="tag-detail-sentiment">🔴</span>
+                <span class="tag-detail-source">[QQ频道]</span>
+                <a class="tag-detail-title" href="https://pd.qq.com/s/sample3" target="_blank">这匹配机制真离谱</a>
+                <span class="tag-detail-summary"> — 连续5把遇到外挂队，根本没法玩</span>
+            </div>
+            </div>
+        </div>
+        <div class="tag-card" data-tag="外挂作弊">
+            <div class="tag-card-header" onclick="toggleTagDetail('外挂作弊')">
+                <div class="tag-card-left">
+                    <span class="tag-card-dot" style="background:#D29922"></span>
+                    <span class="tag-card-name">外挂作弊</span>
+                    <span class="tag-card-count">6条</span>
+                </div>
+                <div class="tag-card-right">
+                    <span class="tag-card-sentiment-mini">
+                        <span class="mini-pos" title="正面">0</span>
+                        <span class="mini-neu" title="中性">1</span>
+                        <span class="mini-neg" title="负面">5</span>
+                    </span>
+                    
+                    <span class="tag-card-arrow" id="arrow-外挂作弊">▸</span>
+                </div>
+            </div>
+            <div class="tag-card-detail" id="detail-外挂作弊" style="display:none;">
+                <div class="tag-detail-item">
+                <span class="tag-detail-sentiment">🔴</span>
+                <span class="tag-detail-source">[Steam]</span>
+                <a class="tag-detail-title" href="https://steamcommunity.com/profiles/76561198409386963/recommended/2507950" target="_blank">傻逼游戏，锁头不封透视不封，大战场飞机撞地秒修复上天的不封，绿玩穿三秒封，祝游戏长寿。</a>
+                <span class="tag-detail-summary"> — 傻逼游戏，锁头不封透视不封，大战场飞机撞地秒修复上天的不封，绿玩穿三秒封，祝游戏长寿。</span>
+            </div>
+<div class="tag-detail-item">
+                <span class="tag-detail-sentiment">🔴</span>
+                <span class="tag-detail-source">[Steam]</span>
+                <a class="tag-detail-title" href="https://steamcommunity.com/profiles/76561199237578546/recommended/2507950" target="_blank">小透小锁算绿玩</a>
+                <span class="tag-detail-summary"> — 小透小锁算绿玩</span>
+            </div>
+<div class="tag-detail-item">
+                <span class="tag-detail-sentiment">🔴</span>
+                <span class="tag-detail-source">[NGA]</span>
+                <a class="tag-detail-title" href="https://bbs.nga.cn/read.php?tid=sample2" target="_blank">护航灰产什么时候整治</a>
+                <span class="tag-detail-summary"> — 护航老板逍遥自在，官方却只管盾鼠</span>
+            </div>
+<div class="tag-detail-item">
+                <span class="tag-detail-sentiment">🔴</span>
+                <span class="tag-detail-source">[微博]</span>
+                <a class="tag-detail-title" href="https://weibo.com/sample3" target="_blank">玩家集体吐槽外挂不处理</a>
+                <span class="tag-detail-summary"> — 超话里全是投诉外挂的帖子，官方什么时候回应</span>
+            </div>
+<div class="tag-detail-item">
+                <span class="tag-detail-sentiment">⚪</span>
+                <span class="tag-detail-source">[微信]</span>
+                <a class="tag-detail-title" href="https://mp.weixin.qq.com/s/sample2" target="_blank">三角洲行动运营问题深度分析</a>
+                <span class="tag-detail-summary"> — 从玩家流失数据看运营策略问题，外挂治理与经济系统需重点关注</span>
+            </div>
+<div class="tag-detail-item">
+                <span class="tag-detail-sentiment">🔴</span>
+                <span class="tag-detail-source">[QQ频道]</span>
+                <a class="tag-detail-title" href="https://pd.qq.com/s/sample3" target="_blank">这匹配机制真离谱</a>
+                <span class="tag-detail-summary"> — 连续5把遇到外挂队，根本没法玩</span>
+            </div>
+            </div>
+        </div>
+        <div class="tag-card" data-tag="活动反馈">
+            <div class="tag-card-header" onclick="toggleTagDetail('活动反馈')">
+                <div class="tag-card-left">
+                    <span class="tag-card-dot" style="background:#BC8CFF"></span>
+                    <span class="tag-card-name">活动反馈</span>
+                    <span class="tag-card-count">6条</span>
+                </div>
+                <div class="tag-card-right">
+                    <span class="tag-card-sentiment-mini">
+                        <span class="mini-pos" title="正面">4</span>
+                        <span class="mini-neu" title="中性">2</span>
+                        <span class="mini-neg" title="负面">0</span>
+                    </span>
+                    
+                    <span class="tag-card-arrow" id="arrow-活动反馈">▸</span>
+                </div>
+            </div>
+            <div class="tag-card-detail" id="detail-活动反馈" style="display:none;">
+                <div class="tag-detail-item">
+                <span class="tag-detail-sentiment">⚪</span>
+                <span class="tag-detail-source">[TapTap]</span>
+                <a class="tag-detail-title" href="https://www.taptap.cn/app/330259/review" target="_blank">同意你的说法。S1赛季还是很阴的。</a>
+                <span class="tag-detail-summary"> — 同意你的说法。S1赛季还是很阴的。</span>
+            </div>
+<div class="tag-detail-item">
+                <span class="tag-detail-sentiment">🟢</span>
+                <span class="tag-detail-source">[TapTap]</span>
+                <a class="tag-detail-title" href="https://www.taptap.cn/app/330259/review" target="_blank">一千小时，有发言的基础了吧？ 我来说一下我对这个游戏的看法，好玩吗？好玩，跟朋友一起撤离出来真的很爽，但问题就出在这里，...</a>
+                <span class="tag-detail-summary"> — 一千小时，有发言的基础了吧？ 我来说一下我对这个游戏的看法，好玩吗？好玩，跟朋友一起撤离出来真的很爽，但问题就出在这里，搜打撤，搜，搜不到好东西，打，三角洲的DTK实在太短，装备差距虽说影响不算太大，但总归还是要有的，打完第一场架就很难就很难再打赢第二场架，这是我感觉的，甲修药什么的都有，但就是大部</span>
+            </div>
+<div class="tag-detail-item">
+                <span class="tag-detail-sentiment">⚪</span>
+                <span class="tag-detail-source">[NGA]</span>
+                <a class="tag-detail-title" href="https://bbs.nga.cn/read.php?tid=sample3" target="_blank">新赛季武器平衡性讨论</a>
+                <span class="tag-detail-summary"> — AR-57是不是太强了？其他步枪完全没有出场率</span>
+            </div>
+<div class="tag-detail-item">
+                <span class="tag-detail-sentiment">🟢</span>
+                <span class="tag-detail-source">[微信]</span>
+                <a class="tag-detail-title" href="https://mp.weixin.qq.com/s/sample1" target="_blank">三角洲行动S12赛季全面解读</a>
+                <span class="tag-detail-summary"> — 新地图、新武器、新活动全攻略，一文看懂赛季更新要点</span>
+            </div>
+<div class="tag-detail-item">
+                <span class="tag-detail-sentiment">🟢</span>
+                <span class="tag-detail-source">[抖音]</span>
+                <a class="tag-detail-title" href="https://v.douyin.com/sample1" target="_blank">猛攻节活动真香</a>
+                <span class="tag-detail-summary"> — 姜文代言太有梗了，活动奖励也不错</span>
+            </div>
+<div class="tag-detail-item">
+                <span class="tag-detail-sentiment">🟢</span>
+                <span class="tag-detail-source">[QQ频道]</span>
+                <a class="tag-detail-title" href="https://pd.qq.com/s/sample2" target="_blank">新赛季排位上分攻略分享</a>
+                <span class="tag-detail-summary"> — 分享一套稳定上分的打法思路，亲测有效</span>
+            </div>
+            </div>
+        </div>
+        <div class="tag-card" data-tag="社交组队">
+            <div class="tag-card-header" onclick="toggleTagDetail('社交组队')">
+                <div class="tag-card-left">
+                    <span class="tag-card-dot" style="background:#39D2C0"></span>
+                    <span class="tag-card-name">社交组队</span>
+                    <span class="tag-card-count">4条</span>
+                </div>
+                <div class="tag-card-right">
+                    <span class="tag-card-sentiment-mini">
+                        <span class="mini-pos" title="正面">1</span>
+                        <span class="mini-neu" title="中性">3</span>
+                        <span class="mini-neg" title="负面">0</span>
+                    </span>
+                    
+                    <span class="tag-card-arrow" id="arrow-社交组队">▸</span>
+                </div>
+            </div>
+            <div class="tag-card-detail" id="detail-社交组队" style="display:none;">
+                <div class="tag-detail-item">
+                <span class="tag-detail-sentiment">⚪</span>
+                <span class="tag-detail-source">[百度贴吧]</span>
+                <a class="tag-detail-title" href="https://tieba.baidu.com/p/sample2" target="_blank">有没有人一起组队打排位</a>
+                <span class="tag-detail-summary"> — 钻石段位求固定队，每天晚上8-11点在线</span>
+            </div>
+<div class="tag-detail-item">
+                <span class="tag-detail-sentiment">🟢</span>
+                <span class="tag-detail-source">[抖音]</span>
+                <a class="tag-detail-title" href="https://v.douyin.com/sample2" target="_blank">三角洲行动高光时刻</a>
+                <span class="tag-detail-summary"> — 1v4极限翻盘，队友都看呆了</span>
+            </div>
+<div class="tag-detail-item">
+                <span class="tag-detail-sentiment">⚪</span>
+                <span class="tag-detail-source">[QQ频道]</span>
+                <a class="tag-detail-title" href="https://pd.qq.com/s/dmtyes81b" target="_blank">找固定队友一起开黑</a>
+                <span class="tag-detail-summary"> — 本人钻石段位，找个固定队友每天晚上打</span>
+            </div>
+<div class="tag-detail-item">
+                <span class="tag-detail-sentiment">⚪</span>
+                <span class="tag-detail-source">[QQ频道]</span>
+                <a class="tag-detail-title" href="https://pd.qq.com/s/sample1" target="_blank">今晚有谁一起打排位赛</a>
+                <span class="tag-detail-summary"> — 缺一个辅助位，来个会玩的</span>
+            </div>
+            </div>
+        </div>
+        <div class="tag-card" data-tag="运营策略">
+            <div class="tag-card-header" onclick="toggleTagDetail('运营策略')">
+                <div class="tag-card-left">
+                    <span class="tag-card-dot" style="background:#F85149"></span>
+                    <span class="tag-card-name">运营策略</span>
+                    <span class="tag-card-count">3条</span>
+                </div>
+                <div class="tag-card-right">
+                    <span class="tag-card-sentiment-mini">
+                        <span class="mini-pos" title="正面">1</span>
+                        <span class="mini-neu" title="中性">1</span>
+                        <span class="mini-neg" title="负面">1</span>
+                    </span>
+                    
+                    <span class="tag-card-arrow" id="arrow-运营策略">▸</span>
+                </div>
+            </div>
+            <div class="tag-card-detail" id="detail-运营策略" style="display:none;">
+                <div class="tag-detail-item">
+                <span class="tag-detail-sentiment">🔴</span>
+                <span class="tag-detail-source">[Steam]</span>
+                <a class="tag-detail-title" href="https://steamcommunity.com/profiles/76561198129863727/recommended/2507950" target="_blank">一点小bug都不能修，还推荐给别人玩，推荐给你妈玩玩看你妈会不会抽你俩大嘴巴子吧策划，跑刀多了杀2个人就要被踢，你是不是...</a>
+                <span class="tag-detail-summary"> — 一点小bug都不能修，还推荐给别人玩，推荐给你妈玩玩看你妈会不会抽你俩大嘴巴子吧策划，跑刀多了杀2个人就要被踢，你是不是畜生的时候是被踢出来的孤儿啊</span>
+            </div>
+<div class="tag-detail-item">
+                <span class="tag-detail-sentiment">🟢</span>
+                <span class="tag-detail-source">[NGA]</span>
+                <a class="tag-detail-title" href="https://bbs.nga.cn/read.php?tid=sample1" target="_blank">官方听劝改了不少bug</a>
+                <span class="tag-detail-summary"> — 策划面对面之后确实修了很多问题，好评</span>
+            </div>
+<div class="tag-detail-item">
+                <span class="tag-detail-sentiment">⚪</span>
+                <span class="tag-detail-source">[微信]</span>
+                <a class="tag-detail-title" href="https://mp.weixin.qq.com/s/sample2" target="_blank">三角洲行动运营问题深度分析</a>
+                <span class="tag-detail-summary"> — 从玩家流失数据看运营策略问题，外挂治理与经济系统需重点关注</span>
+            </div>
+            </div>
+        </div>
+        <div class="tag-card" data-tag="经济系统">
+            <div class="tag-card-header" onclick="toggleTagDetail('经济系统')">
+                <div class="tag-card-left">
+                    <span class="tag-card-dot" style="background:#FF7B72"></span>
+                    <span class="tag-card-name">经济系统</span>
+                    <span class="tag-card-count">3条</span>
+                </div>
+                <div class="tag-card-right">
+                    <span class="tag-card-sentiment-mini">
+                        <span class="mini-pos" title="正面">0</span>
+                        <span class="mini-neu" title="中性">1</span>
+                        <span class="mini-neg" title="负面">2</span>
+                    </span>
+                    
+                    <span class="tag-card-arrow" id="arrow-经济系统">▸</span>
+                </div>
+            </div>
+            <div class="tag-card-detail" id="detail-经济系统" style="display:none;">
+                <div class="tag-detail-item">
+                <span class="tag-detail-sentiment">⚪</span>
+                <span class="tag-detail-source">[TapTap]</span>
+                <a class="tag-detail-title" href="https://www.taptap.cn/app/330259/review" target="_blank">作为第一批入坑的玩家真的有太多想吐槽的，我先对想入坑的玩家提4个建议吧， 第一：如果你是一个人我建议找一个固排或者现实中...</a>
+                <span class="tag-detail-summary"> — 作为第一批入坑的玩家真的有太多想吐槽的，我先对想入坑的玩家提4个建议吧， 第一：如果你是一个人我建议找一个固排或者现实中找一个朋友一起玩。 第二：3x3任务很麻烦需要花费大量时间可以选择不做或者慢慢做尽力而为就行。 第三：机枪兵，喷火兵，盾兵围着他转圈刀他有烟的话，先往上脸上封烟。记得人机包会出卡，</span>
+            </div>
+<div class="tag-detail-item">
+                <span class="tag-detail-sentiment">🔴</span>
+                <span class="tag-detail-source">[百度贴吧]</span>
+                <a class="tag-detail-title" href="https://tieba.baidu.com/p/sample1" target="_blank">经济系统贬值太快</a>
+                <span class="tag-detail-summary"> — 纯币240M的账号现在估计只有500多了</span>
+            </div>
+<div class="tag-detail-item">
+                <span class="tag-detail-sentiment">🔴</span>
+                <span class="tag-detail-source">[NGA]</span>
+                <a class="tag-detail-title" href="https://bbs.nga.cn/read.php?tid=sample2" target="_blank">护航灰产什么时候整治</a>
+                <span class="tag-detail-summary"> — 护航老板逍遥自在，官方却只管盾鼠</span>
+            </div>
+            </div>
+        </div>
+        <div class="tag-card" data-tag="玩法建议">
+            <div class="tag-card-header" onclick="toggleTagDetail('玩法建议')">
+                <div class="tag-card-left">
+                    <span class="tag-card-dot" style="background:#79C0FF"></span>
+                    <span class="tag-card-name">玩法建议</span>
+                    <span class="tag-card-count">3条</span>
+                </div>
+                <div class="tag-card-right">
+                    <span class="tag-card-sentiment-mini">
+                        <span class="mini-pos" title="正面">1</span>
+                        <span class="mini-neu" title="中性">1</span>
+                        <span class="mini-neg" title="负面">1</span>
+                    </span>
+                    
+                    <span class="tag-card-arrow" id="arrow-玩法建议">▸</span>
+                </div>
+            </div>
+            <div class="tag-card-detail" id="detail-玩法建议" style="display:none;">
+                <div class="tag-detail-item">
+                <span class="tag-detail-sentiment">⚪</span>
+                <span class="tag-detail-source">[NGA]</span>
+                <a class="tag-detail-title" href="https://bbs.nga.cn/read.php?tid=sample3" target="_blank">新赛季武器平衡性讨论</a>
+                <span class="tag-detail-summary"> — AR-57是不是太强了？其他步枪完全没有出场率</span>
+            </div>
+<div class="tag-detail-item">
+                <span class="tag-detail-sentiment">🟢</span>
+                <span class="tag-detail-source">[微信]</span>
+                <a class="tag-detail-title" href="https://mp.weixin.qq.com/s/sample1" target="_blank">三角洲行动S12赛季全面解读</a>
+                <span class="tag-detail-summary"> — 新地图、新武器、新活动全攻略，一文看懂赛季更新要点</span>
+            </div>
+<div class="tag-detail-item">
+                <span class="tag-detail-sentiment">🔴</span>
+                <span class="tag-detail-source">[抖音]</span>
+                <a class="tag-detail-title" href="https://v.douyin.com/sample3" target="_blank">三角洲手机版卡顿实测</a>
+                <span class="tag-detail-summary"> — 中端机实测帧率表现，优化确实需要加强</span>
+            </div>
+            </div>
+        </div>
+        <div class="tag-card" data-tag="梗文化二创">
+            <div class="tag-card-header" onclick="toggleTagDetail('梗文化二创')">
+                <div class="tag-card-left">
+                    <span class="tag-card-dot" style="background:#FFA657"></span>
+                    <span class="tag-card-name">梗文化二创</span>
+                    <span class="tag-card-count">3条</span>
+                </div>
+                <div class="tag-card-right">
+                    <span class="tag-card-sentiment-mini">
+                        <span class="mini-pos" title="正面">3</span>
+                        <span class="mini-neu" title="中性">0</span>
+                        <span class="mini-neg" title="负面">0</span>
+                    </span>
+                    
+                    <span class="tag-card-arrow" id="arrow-梗文化二创">▸</span>
+                </div>
+            </div>
+            <div class="tag-card-detail" id="detail-梗文化二创" style="display:none;">
+                <div class="tag-detail-item">
+                <span class="tag-detail-sentiment">🟢</span>
+                <span class="tag-detail-source">[微博]</span>
+                <a class="tag-detail-title" href="https://weibo.com/sample1" target="_blank">威风的龙火出圈了</a>
+                <span class="tag-detail-summary"> — 综艺里都出现了三角洲的梗，影响力真大</span>
+            </div>
+<div class="tag-detail-item">
+                <span class="tag-detail-sentiment">🟢</span>
+                <span class="tag-detail-source">[微博]</span>
+                <a class="tag-detail-title" href="https://weibo.com/sample2" target="_blank">三角洲行动超话热议新联动</a>
+                <span class="tag-detail-summary"> — 姜文联动皮肤效果曝光，网友热议太有梗了</span>
+            </div>
+<div class="tag-detail-item">
+                <span class="tag-detail-sentiment">🟢</span>
+                <span class="tag-detail-source">[抖音]</span>
+                <a class="tag-detail-title" href="https://v.douyin.com/sample1" target="_blank">猛攻节活动真香</a>
+                <span class="tag-detail-summary"> — 姜文代言太有梗了，活动奖励也不错</span>
+            </div>
+            </div>
+        </div>
+        <div class="tag-card" data-tag="跨界联动">
+            <div class="tag-card-header" onclick="toggleTagDetail('跨界联动')">
+                <div class="tag-card-left">
+                    <span class="tag-card-dot" style="background:#7EE787"></span>
+                    <span class="tag-card-name">跨界联动</span>
+                    <span class="tag-card-count">3条</span>
+                </div>
+                <div class="tag-card-right">
+                    <span class="tag-card-sentiment-mini">
+                        <span class="mini-pos" title="正面">3</span>
+                        <span class="mini-neu" title="中性">0</span>
+                        <span class="mini-neg" title="负面">0</span>
+                    </span>
+                    
+                    <span class="tag-card-arrow" id="arrow-跨界联动">▸</span>
+                </div>
+            </div>
+            <div class="tag-card-detail" id="detail-跨界联动" style="display:none;">
+                <div class="tag-detail-item">
+                <span class="tag-detail-sentiment">🟢</span>
+                <span class="tag-detail-source">[微博]</span>
+                <a class="tag-detail-title" href="https://weibo.com/sample1" target="_blank">威风的龙火出圈了</a>
+                <span class="tag-detail-summary"> — 综艺里都出现了三角洲的梗，影响力真大</span>
+            </div>
+<div class="tag-detail-item">
+                <span class="tag-detail-sentiment">🟢</span>
+                <span class="tag-detail-source">[微博]</span>
+                <a class="tag-detail-title" href="https://weibo.com/sample2" target="_blank">三角洲行动超话热议新联动</a>
+                <span class="tag-detail-summary"> — 姜文联动皮肤效果曝光，网友热议太有梗了</span>
+            </div>
+<div class="tag-detail-item">
+                <span class="tag-detail-sentiment">🟢</span>
+                <span class="tag-detail-source">[抖音]</span>
+                <a class="tag-detail-title" href="https://v.douyin.com/sample1" target="_blank">猛攻节活动真香</a>
+                <span class="tag-detail-summary"> — 姜文代言太有梗了，活动奖励也不错</span>
+            </div>
+            </div>
+        </div>
+        <div class="tag-card" data-tag="皮肤外观">
+            <div class="tag-card-header" onclick="toggleTagDetail('皮肤外观')">
+                <div class="tag-card-left">
+                    <span class="tag-card-dot" style="background:#D2A8FF"></span>
+                    <span class="tag-card-name">皮肤外观</span>
+                    <span class="tag-card-count">2条</span>
+                </div>
+                <div class="tag-card-right">
+                    <span class="tag-card-sentiment-mini">
+                        <span class="mini-pos" title="正面">2</span>
+                        <span class="mini-neu" title="中性">0</span>
+                        <span class="mini-neg" title="负面">0</span>
+                    </span>
+                    
+                    <span class="tag-card-arrow" id="arrow-皮肤外观">▸</span>
+                </div>
+            </div>
+            <div class="tag-card-detail" id="detail-皮肤外观" style="display:none;">
+                <div class="tag-detail-item">
+                <span class="tag-detail-sentiment">🟢</span>
+                <span class="tag-detail-source">[微博]</span>
+                <a class="tag-detail-title" href="https://weibo.com/sample2" target="_blank">三角洲行动超话热议新联动</a>
+                <span class="tag-detail-summary"> — 姜文联动皮肤效果曝光，网友热议太有梗了</span>
+            </div>
+<div class="tag-detail-item">
+                <span class="tag-detail-sentiment">🟢</span>
+                <span class="tag-detail-source">[抖音]</span>
+                <a class="tag-detail-title" href="https://v.douyin.com/sample4" target="_blank">最帅皮肤搭配推荐</a>
+                <span class="tag-detail-summary"> — 这三套皮肤组合太帅了，曼德尔砖必抽系列</span>
+            </div>
+            </div>
+        </div>
+        </div>
+    </div>
+
+    <div class="daily-summary">
+        <div class="summary-title"><span class="summary-icon">📋</span>每日整体总结</div>
+        <div class="summary-text">今日共采集72条用户声音，其中正面20条(27.8%)、中性25条(34.7%)、负面27条(37.5%)。正负面声量接近，玩家态度分化明显。讨论最热烈的话题依次为 「设备优化」(9条)、「匹配机制」(7条)、「外挂作弊」(6条)，其次为 「活动反馈」、「社交组队」、「运营策略」 等。首次采集，暂无趋势对比数据。无异常预警。</div>
+    </div>
+
+    
+
+    <div class="section-title" style="margin-top:24px;"><span class="section-icon"></span>阵地详情</div>
+    <div class="channel-tabs"><div class="channel-tab active" onclick="switchChannel('TapTap')">TapTap</div>
+<div class="channel-tab " onclick="switchChannel('B站')">B站</div>
+<div class="channel-tab " onclick="switchChannel('百度贴吧')">百度贴吧</div>
+<div class="channel-tab " onclick="switchChannel('Steam')">Steam</div>
+<div class="channel-tab " onclick="switchChannel('NGA')">NGA</div>
+<div class="channel-tab " onclick="switchChannel('微博')">微博</div>
+<div class="channel-tab " onclick="switchChannel('微信')">微信</div>
+<div class="channel-tab " onclick="switchChannel('抖音')">抖音</div>
+<div class="channel-tab " onclick="switchChannel('QQ频道')">QQ频道</div></div>
+    
+        <div class="channel-content " id="channel-B站">
+            <div class="channel-header">
+                <h2>B站</h2>
+                <div class="channel-stats">
+                    <span>帖子数: 15</span>
+                    <span>正面: 0</span>
+                    <span>负面: 0</span>
+                    <span>较昨日: -</span>
+                </div>
+            </div>
+            <div class="post-item">
+                    <div class="post-header">
+                        <div class="post-title"><a href="https://www.bilibili.com/video/BV1GM5v6REAN" target="_blank">神秘小视频太肥美了</a></div>
+                        <span class="post-sentiment neutral">中性</span>
+                    </div>
+                    <div class="post-summary">-</div>
+                    <div class="post-meta">
+                        <span class="post-source">[B站]</span>
+                        
+                        <span class="post-metric">播放: 1</span>
+                        <a class="post-url" href="https://www.bilibili.com/video/BV1GM5v6REAN" target="_blank" title="https://www.bilibili.com/video/BV1GM5v6REAN">https://www.bilibili.com/video/BV1GM5v6REAN</a>
+                    </div>
+                </div>
+<div class="post-item">
+                    <div class="post-header">
+                        <div class="post-title"><a href="https://www.bilibili.com/video/BV13M5v6REXc" target="_blank">【梨子】水友在航天猛猛干人，梨神在请求共享物资，甚至想对方散个榔子，我们三个真强~</a></div>
+                        <span class="post-sentiment neutral">中性</span>
+                    </div>
+                    
+                    <div class="post-meta">
+                        <span class="post-source">[B站]</span>
+                        
+                        <span class="post-metric">播放: 1</span>
+                        <a class="post-url" href="https://www.bilibili.com/video/BV13M5v6REXc" target="_blank" title="https://www.bilibili.com/video/BV13M5v6REXc">https://www.bilibili.com/video/BV13M5v6REXc</a>
+                    </div>
+                </div>
+<div class="post-item">
+                    <div class="post-header">
+                        <div class="post-title"><a href="https://www.bilibili.com/video/BV1XM5v6RE1M" target="_blank">看完39场三角洲职业比赛，告诉你职业选手都在用什么枪？M14大人被抛弃了？</a></div>
+                        <span class="post-sentiment neutral">中性</span>
+                    </div>
+                    <div class="post-summary">看了将近30个小时的比赛！希望能帮到大家！</div>
+                    <div class="post-meta">
+                        <span class="post-source">[B站]</span>
+                        
+                        
+                        <a class="post-url" href="https://www.bilibili.com/video/BV1XM5v6RE1M" target="_blank" title="https://www.bilibili.com/video/BV1XM5v6RE1M">https://www.bilibili.com/video/BV1XM5v6RE1M</a>
+                    </div>
+                </div>
+<div class="post-item">
+                    <div class="post-header">
+                        <div class="post-title"><a href="https://www.bilibili.com/video/BV1ag5v6WETP" target="_blank">旮旯给木第一人</a></div>
+                        <span class="post-sentiment neutral">中性</span>
+                    </div>
+                    
+                    <div class="post-meta">
+                        <span class="post-source">[B站]</span>
+                        
+                        <span class="post-metric">播放: 1</span>
+                        <a class="post-url" href="https://www.bilibili.com/video/BV1ag5v6WETP" target="_blank" title="https://www.bilibili.com/video/BV1ag5v6WETP">https://www.bilibili.com/video/BV1ag5v6WETP</a>
+                    </div>
+                </div>
+<div class="post-item">
+                    <div class="post-header">
+                        <div class="post-title"><a href="https://www.bilibili.com/video/BV1gg5v6WEpf" target="_blank">M4A1最正确的改枪居然是这样！，腰射加高倍镜机枪流M4A1!!最正确的改枪居然是这样！</a></div>
+                        <span class="post-sentiment neutral">中性</span>
+                    </div>
+                    
+                    <div class="post-meta">
+                        <span class="post-source">[B站]</span>
+                        
+                        
+                        <a class="post-url" href="https://www.bilibili.com/video/BV1gg5v6WEpf" target="_blank" title="https://www.bilibili.com/video/BV1gg5v6WEpf">https://www.bilibili.com/video/BV1gg5v6WEpf</a>
+                    </div>
+                </div>
+<div class="post-item">
+                    <div class="post-header">
+                        <div class="post-title"><a href="https://www.bilibili.com/video/BV1XM5v6REzX" target="_blank">我没想到挖到足球又出光盘</a></div>
+                        <span class="post-sentiment neutral">中性</span>
+                    </div>
+                    
+                    <div class="post-meta">
+                        <span class="post-source">[B站]</span>
+                        
+                        
+                        <a class="post-url" href="https://www.bilibili.com/video/BV1XM5v6REzX" target="_blank" title="https://www.bilibili.com/video/BV1XM5v6REzX">https://www.bilibili.com/video/BV1XM5v6REzX</a>
+                    </div>
+                </div>
+<div class="post-item">
+                    <div class="post-header">
+                        <div class="post-title"><a href="https://www.bilibili.com/video/BV1GM5v6REYp" target="_blank">盘点三角洲里的绝版物品（一）#三角洲行动 #三角洲烽火职业联赛#三角洲总决赛战队集结 #三角洲职业联赛春季总决赛#三角洲威龙生日会</a></div>
+                        <span class="post-sentiment neutral">中性</span>
+                    </div>
+                    <div class="post-summary">-</div>
+                    <div class="post-meta">
+                        <span class="post-source">[B站]</span>
+                        
+                        <span class="post-metric">播放: 1</span>
+                        <a class="post-url" href="https://www.bilibili.com/video/BV1GM5v6REYp" target="_blank" title="https://www.bilibili.com/video/BV1GM5v6REYp">https://www.bilibili.com/video/BV1GM5v6REYp</a>
+                    </div>
+                </div>
+<div class="post-item">
+                    <div class="post-header">
+                        <div class="post-title"><a href="https://www.bilibili.com/video/BV1GM5v6RE2Y" target="_blank">可当世界只剩下灰烬，我的爱成了最痛的执念。</a></div>
+                        <span class="post-sentiment neutral">中性</span>
+                    </div>
+                    <div class="post-summary">摸泪包天可预约</div>
+                    <div class="post-meta">
+                        <span class="post-source">[B站]</span>
+                        
+                        <span class="post-metric">播放: 1</span>
+                        <a class="post-url" href="https://www.bilibili.com/video/BV1GM5v6RE2Y" target="_blank" title="https://www.bilibili.com/video/BV1GM5v6RE2Y">https://www.bilibili.com/video/BV1GM5v6RE2Y</a>
+                    </div>
+                </div>
+<div class="post-item">
+                    <div class="post-header">
+                        <div class="post-title"><a href="https://www.bilibili.com/video/BV12F5e63EuY" target="_blank">小时候真被这把暗星打过</a></div>
+                        <span class="post-sentiment neutral">中性</span>
+                    </div>
+                    
+                    <div class="post-meta">
+                        <span class="post-source">[B站]</span>
+                        
+                        <span class="post-metric">播放: 39</span><span class="post-metric">赞: 2</span>
+                        <a class="post-url" href="https://www.bilibili.com/video/BV12F5e63EuY" target="_blank" title="https://www.bilibili.com/video/BV12F5e63EuY">https://www.bilibili.com/video/BV12F5e63EuY</a>
+                    </div>
+                </div>
+<div class="post-item">
+                    <div class="post-header">
+                        <div class="post-title"><a href="https://www.bilibili.com/video/BV1yj596wEQo" target="_blank">【钢琴Cover】典狱长进行曲 完整版 （附谱）</a></div>
+                        <span class="post-sentiment neutral">中性</span>
+                    </div>
+                    <div class="post-summary">钢琴谱：BV1ddcQzfE4d</div>
+                    <div class="post-meta">
+                        <span class="post-source">[B站]</span>
+                        
+                        <span class="post-metric">赞: 1</span>
+                        <a class="post-url" href="https://www.bilibili.com/video/BV1yj596wEQo" target="_blank" title="https://www.bilibili.com/video/BV1yj596wEQo">https://www.bilibili.com/video/BV1yj596wEQo</a>
+                    </div>
+                </div>
+<div class="post-item">
+                    <div class="post-header">
+                        <div class="post-title"><a href="https://www.bilibili.com/video/BV1Ew5E6REXc" target="_blank">找两位双子星 谁拿人头谁是哥</a></div>
+                        <span class="post-sentiment neutral">中性</span>
+                    </div>
+                    
+                    <div class="post-meta">
+                        <span class="post-source">[B站]</span>
+                        
+                        <span class="post-metric">播放: 1</span>
+                        <a class="post-url" href="https://www.bilibili.com/video/BV1Ew5E6REXc" target="_blank" title="https://www.bilibili.com/video/BV1Ew5E6REXc">https://www.bilibili.com/video/BV1Ew5E6REXc</a>
+                    </div>
+                </div>
+<div class="post-item">
+                    <div class="post-header">
+                        <div class="post-title"><a href="https://www.bilibili.com/video/BV1aM5v6REi2" target="_blank">？？？</a></div>
+                        <span class="post-sentiment neutral">中性</span>
+                    </div>
+                    <div class="post-summary">-</div>
+                    <div class="post-meta">
+                        <span class="post-source">[B站]</span>
+                        
+                        <span class="post-metric">赞: 2</span>
+                        <a class="post-url" href="https://www.bilibili.com/video/BV1aM5v6REi2" target="_blank" title="https://www.bilibili.com/video/BV1aM5v6REi2">https://www.bilibili.com/video/BV1aM5v6REi2</a>
+                    </div>
+                </div>
+<div class="post-item">
+                    <div class="post-header">
+                        <div class="post-title"><a href="https://www.bilibili.com/video/BV1gg5v6WEpn" target="_blank">2小时跑刀实况</a></div>
+                        <span class="post-sentiment neutral">中性</span>
+                    </div>
+                    
+                    <div class="post-meta">
+                        <span class="post-source">[B站]</span>
+                        
+                        <span class="post-metric">赞: 1</span>
+                        <a class="post-url" href="https://www.bilibili.com/video/BV1gg5v6WEpn" target="_blank" title="https://www.bilibili.com/video/BV1gg5v6WEpn">https://www.bilibili.com/video/BV1gg5v6WEpn</a>
+                    </div>
+                </div>
+<div class="post-item">
+                    <div class="post-header">
+                        <div class="post-title"><a href="https://www.bilibili.com/video/BV1aM5v6REh1" target="_blank">法老你怎么自动解体了！</a></div>
+                        <span class="post-sentiment neutral">中性</span>
+                    </div>
+                    <div class="post-summary">-</div>
+                    <div class="post-meta">
+                        <span class="post-source">[B站]</span>
+                        
+                        <span class="post-metric">播放: 42</span><span class="post-metric">赞: 7</span>
+                        <a class="post-url" href="https://www.bilibili.com/video/BV1aM5v6REh1" target="_blank" title="https://www.bilibili.com/video/BV1aM5v6REh1">https://www.bilibili.com/video/BV1aM5v6REh1</a>
+                    </div>
+                </div>
+<div class="post-item">
+                    <div class="post-header">
+                        <div class="post-title"><a href="https://www.bilibili.com/video/BV13M5v6REp4" target="_blank">【三旬下饭食堂】这QQ莓莓奶茶，不赖</a></div>
+                        <span class="post-sentiment neutral">中性</span>
+                    </div>
+                    <div class="post-summary">-</div>
+                    <div class="post-meta">
+                        <span class="post-source">[B站]</span>
+                        
+                        <span class="post-metric">播放: 5</span><span class="post-metric">赞: 3</span>
+                        <a class="post-url" href="https://www.bilibili.com/video/BV13M5v6REp4" target="_blank" title="https://www.bilibili.com/video/BV13M5v6REp4">https://www.bilibili.com/video/BV13M5v6REp4</a>
+                    </div>
+                </div>
+        </div>
+        <div class="channel-content " id="channel-Steam">
+            <div class="channel-header">
+                <h2>Steam</h2>
+                <div class="channel-stats">
+                    <span>帖子数: 31</span>
+                    <span>正面: 9</span>
+                    <span>负面: 21</span>
+                    <span>较昨日: -</span>
+                </div>
+            </div>
+            <div class="post-item">
+                    <div class="post-header">
+                        <div class="post-title"><a href="https://store.steampowered.com/app/2507950/#app_reviews_hash" target="_blank">Steam评测概览: 好评率 41.1%</a></div>
+                        <span class="post-sentiment positive">正面</span>
+                    </div>
+                    <div class="post-summary">总评测: 55667, 正面: 22853, 负面: 32814</div>
+                    <div class="post-meta">
+                        <span class="post-source">[Steam]</span>
+                        
+                        <span class="post-metric">总评测: 55667</span><span class="post-metric">好评率%: 41.1</span>
+                        <a class="post-url" href="https://store.steampowered.com/app/2507950/#app_reviews_hash" target="_blank" title="https://store.steampowered.com/app/2507950/#app_reviews_hash">https://store.steampowered.com/app/2507950/#app_reviews_hash</a>
+                    </div>
+                </div>
+<div class="post-item">
+                    <div class="post-header">
+                        <div class="post-title"><a href="https://steamcommunity.com/profiles/76561199222994791/recommended/2507950" target="_blank">什么神经检查机制莫名其妙封我三天</a></div>
+                        <span class="post-sentiment negative">负面</span>
+                    </div>
+                    <div class="post-summary">什么神经检查机制莫名其妙封我三天</div>
+                    <div class="post-meta">
+                        <span class="post-source">[Steam]</span>
+                        
+                        
+                        <a class="post-url" href="https://steamcommunity.com/profiles/76561199222994791/recommended/2507950" target="_blank" title="https://steamcommunity.com/profiles/76561199222994791/recommended/2507950">https://steamcommunity.com/profiles/76561199222994791/recommended/2507950</a>
+                    </div>
+                </div>
+<div class="post-item">
+                    <div class="post-header">
+                        <div class="post-title"><a href="https://steamcommunity.com/profiles/76561199151494227/recommended/2507950" target="_blank">最近很火的主流游戏，值得推荐</a></div>
+                        <span class="post-sentiment positive">正面</span>
+                    </div>
+                    <div class="post-summary">最近很火的主流游戏，值得推荐</div>
+                    <div class="post-meta">
+                        <span class="post-source">[Steam]</span>
+                        
+                        <span class="post-metric">游玩h: 60</span>
+                        <a class="post-url" href="https://steamcommunity.com/profiles/76561199151494227/recommended/2507950" target="_blank" title="https://steamcommunity.com/profiles/76561199151494227/recommended/2507950">https://steamcommunity.com/profiles/76561199151494227/recommended/2507950</a>
+                    </div>
+                </div>
+<div class="post-item">
+                    <div class="post-header">
+                        <div class="post-title"><a href="https://steamcommunity.com/profiles/76561199536046797/recommended/2507950" target="_blank">开启老是太慢哎 一言难尽</a></div>
+                        <span class="post-sentiment negative">负面</span>
+                    </div>
+                    <div class="post-summary">开启老是太慢哎 一言难尽</div>
+                    <div class="post-meta">
+                        <span class="post-source">[Steam]</span>
+                        
+                        <span class="post-metric">游玩h: 1002</span>
+                        <a class="post-url" href="https://steamcommunity.com/profiles/76561199536046797/recommended/2507950" target="_blank" title="https://steamcommunity.com/profiles/76561199536046797/recommended/2507950">https://steamcommunity.com/profiles/76561199536046797/recommended/2507950</a>
+                    </div>
+                </div>
+<div class="post-item">
+                    <div class="post-header">
+                        <div class="post-title"><a href="https://steamcommunity.com/profiles/76561199674821366/recommended/2507950" target="_blank">WSD</a></div>
+                        <span class="post-sentiment positive">正面</span>
+                    </div>
+                    <div class="post-summary">WSD</div>
+                    <div class="post-meta">
+                        <span class="post-source">[Steam]</span>
+                        
+                        <span class="post-metric">游玩h: 9</span>
+                        <a class="post-url" href="https://steamcommunity.com/profiles/76561199674821366/recommended/2507950" target="_blank" title="https://steamcommunity.com/profiles/76561199674821366/recommended/2507950">https://steamcommunity.com/profiles/76561199674821366/recommended/2507950</a>
+                    </div>
+                </div>
+<div class="post-item">
+                    <div class="post-header">
+                        <div class="post-title"><a href="https://steamcommunity.com/profiles/76561199115089523/recommended/2507950" target="_blank">挂多游戏体验感差，看推荐说是个可以不开枪的搜索游戏，来玩之后发现不杀的只是小部分，大部分都是直接杀，或者骗出来杀。</a></div>
+                        <span class="post-sentiment negative">负面</span>
+                    </div>
+                    <div class="post-summary">挂多游戏体验感差，看推荐说是个可以不开枪的搜索游戏，来玩之后发现不杀的只是小部分，大部分都是直接杀，或者骗出来杀。</div>
+                    <div class="post-meta">
+                        <span class="post-source">[Steam]</span>
+                        
+                        <span class="post-metric">游玩h: 174</span>
+                        <a class="post-url" href="https://steamcommunity.com/profiles/76561199115089523/recommended/2507950" target="_blank" title="https://steamcommunity.com/profiles/76561199115089523/recommended/2507950">https://steamcommunity.com/profiles/76561199115089523/recommended/2507950</a>
+                    </div>
+                </div>
+<div class="post-item">
+                    <div class="post-header">
+                        <div class="post-title"><a href="https://steamcommunity.com/profiles/76561199864854691/recommended/2507950" target="_blank">爱玩</a></div>
+                        <span class="post-sentiment positive">正面</span>
+                    </div>
+                    <div class="post-summary">爱玩</div>
+                    <div class="post-meta">
+                        <span class="post-source">[Steam]</span>
+                        
+                        <span class="post-metric">游玩h: 1774</span>
+                        <a class="post-url" href="https://steamcommunity.com/profiles/76561199864854691/recommended/2507950" target="_blank" title="https://steamcommunity.com/profiles/76561199864854691/recommended/2507950">https://steamcommunity.com/profiles/76561199864854691/recommended/2507950</a>
+                    </div>
+                </div>
+<div class="post-item">
+                    <div class="post-header">
+                        <div class="post-title"><a href="https://steamcommunity.com/profiles/76561199194951088/recommended/2507950" target="_blank">对新手和搬家鼠很友好</a></div>
+                        <span class="post-sentiment positive">正面</span>
+                    </div>
+                    <div class="post-summary">对新手和搬家鼠很友好</div>
+                    <div class="post-meta">
+                        <span class="post-source">[Steam]</span>
+                        
+                        <span class="post-metric">游玩h: 23</span><span class="post-metric">有用: 1</span>
+                        <a class="post-url" href="https://steamcommunity.com/profiles/76561199194951088/recommended/2507950" target="_blank" title="https://steamcommunity.com/profiles/76561199194951088/recommended/2507950">https://steamcommunity.com/profiles/76561199194951088/recommended/2507950</a>
+                    </div>
+                </div>
+<div class="post-item">
+                    <div class="post-header">
+                        <div class="post-title"><a href="https://steamcommunity.com/profiles/76561199796738110/recommended/2507950" target="_blank">卡死发的刚发的</a></div>
+                        <span class="post-sentiment positive">正面</span>
+                    </div>
+                    <div class="post-summary">卡死发的刚发的</div>
+                    <div class="post-meta">
+                        <span class="post-source">[Steam]</span>
+                        
+                        <span class="post-metric">游玩h: 615</span><span class="post-metric">有用: 1</span>
+                        <a class="post-url" href="https://steamcommunity.com/profiles/76561199796738110/recommended/2507950" target="_blank" title="https://steamcommunity.com/profiles/76561199796738110/recommended/2507950">https://steamcommunity.com/profiles/76561199796738110/recommended/2507950</a>
+                    </div>
+                </div>
+<div class="post-item">
+                    <div class="post-header">
+                        <div class="post-title"><a href="https://steamcommunity.com/profiles/76561199238231042/recommended/2507950" target="_blank">垃圾游戏</a></div>
+                        <span class="post-sentiment negative">负面</span>
+                    </div>
+                    <div class="post-summary">垃圾游戏</div>
+                    <div class="post-meta">
+                        <span class="post-source">[Steam]</span>
+                        
+                        <span class="post-metric">游玩h: 11</span><span class="post-metric">有用: 1</span>
+                        <a class="post-url" href="https://steamcommunity.com/profiles/76561199238231042/recommended/2507950" target="_blank" title="https://steamcommunity.com/profiles/76561199238231042/recommended/2507950">https://steamcommunity.com/profiles/76561199238231042/recommended/2507950</a>
+                    </div>
+                </div>
+<div class="post-item">
+                    <div class="post-header">
+                        <div class="post-title"><a href="https://steamcommunity.com/profiles/76561198851964882/recommended/2507950" target="_blank">狗屎游戏</a></div>
+                        <span class="post-sentiment neutral">中性</span>
+                    </div>
+                    <div class="post-summary">狗屎游戏</div>
+                    <div class="post-meta">
+                        <span class="post-source">[Steam]</span>
+                        
+                        <span class="post-metric">游玩h: 1830</span><span class="post-metric">有用: 2</span>
+                        <a class="post-url" href="https://steamcommunity.com/profiles/76561198851964882/recommended/2507950" target="_blank" title="https://steamcommunity.com/profiles/76561198851964882/recommended/2507950">https://steamcommunity.com/profiles/76561198851964882/recommended/2507950</a>
+                    </div>
+                </div>
+<div class="post-item">
+                    <div class="post-header">
+                        <div class="post-title"><a href="https://steamcommunity.com/profiles/76561198377969007/recommended/2507950" target="_blank">游戏被盗以后，没地方申诉和恢复</a></div>
+                        <span class="post-sentiment negative">负面</span>
+                    </div>
+                    <div class="post-summary">游戏被盗以后，没地方申诉和恢复</div>
+                    <div class="post-meta">
+                        <span class="post-source">[Steam]</span>
+                        
+                        <span class="post-metric">游玩h: 783</span><span class="post-metric">有用: 1</span>
+                        <a class="post-url" href="https://steamcommunity.com/profiles/76561198377969007/recommended/2507950" target="_blank" title="https://steamcommunity.com/profiles/76561198377969007/recommended/2507950">https://steamcommunity.com/profiles/76561198377969007/recommended/2507950</a>
+                    </div>
+                </div>
+<div class="post-item">
+                    <div class="post-header">
+                        <div class="post-title"><a href="https://steamcommunity.com/profiles/76561198409386963/recommended/2507950" target="_blank">傻逼游戏，锁头不封透视不封，大战场飞机撞地秒修复上天的不封，绿玩穿三秒封，祝游戏长寿。</a></div>
+                        <span class="post-sentiment negative">负面</span>
+                    </div>
+                    <div class="post-summary">傻逼游戏，锁头不封透视不封，大战场飞机撞地秒修复上天的不封，绿玩穿三秒封，祝游戏长寿。</div>
+                    <div class="post-meta">
+                        <span class="post-source">[Steam]</span>
+                        <span class="post-tag">外挂作弊</span>
+                        <span class="post-metric">游玩h: 49</span><span class="post-metric">有用: 2</span>
+                        <a class="post-url" href="https://steamcommunity.com/profiles/76561198409386963/recommended/2507950" target="_blank" title="https://steamcommunity.com/profiles/76561198409386963/recommended/2507950">https://steamcommunity.com/profiles/76561198409386963/recommended/2507950</a>
+                    </div>
+                </div>
+<div class="post-item">
+                    <div class="post-header">
+                        <div class="post-title"><a href="https://steamcommunity.com/profiles/76561199504032773/recommended/2507950" target="_blank">烂</a></div>
+                        <span class="post-sentiment negative">负面</span>
+                    </div>
+                    <div class="post-summary">烂</div>
+                    <div class="post-meta">
+                        <span class="post-source">[Steam]</span>
+                        
+                        <span class="post-metric">游玩h: 384</span>
+                        <a class="post-url" href="https://steamcommunity.com/profiles/76561199504032773/recommended/2507950" target="_blank" title="https://steamcommunity.com/profiles/76561199504032773/recommended/2507950">https://steamcommunity.com/profiles/76561199504032773/recommended/2507950</a>
+                    </div>
+                </div>
+<div class="post-item">
+                    <div class="post-header">
+                        <div class="post-title"><a href="https://steamcommunity.com/profiles/76561199220753343/recommended/2507950" target="_blank">好玩</a></div>
+                        <span class="post-sentiment positive">正面</span>
+                    </div>
+                    <div class="post-summary">好玩</div>
+                    <div class="post-meta">
+                        <span class="post-source">[Steam]</span>
+                        
+                        <span class="post-metric">游玩h: 251</span>
+                        <a class="post-url" href="https://steamcommunity.com/profiles/76561199220753343/recommended/2507950" target="_blank" title="https://steamcommunity.com/profiles/76561199220753343/recommended/2507950">https://steamcommunity.com/profiles/76561199220753343/recommended/2507950</a>
+                    </div>
+                </div>
+<div class="post-item">
+                    <div class="post-header">
+                        <div class="post-title"><a href="https://steamcommunity.com/profiles/76561199186543475/recommended/2507950" target="_blank">充钱的都sb</a></div>
+                        <span class="post-sentiment negative">负面</span>
+                    </div>
+                    <div class="post-summary">充钱的都sb</div>
+                    <div class="post-meta">
+                        <span class="post-source">[Steam]</span>
+                        
+                        <span class="post-metric">游玩h: 2091</span><span class="post-metric">有用: 1</span>
+                        <a class="post-url" href="https://steamcommunity.com/profiles/76561199186543475/recommended/2507950" target="_blank" title="https://steamcommunity.com/profiles/76561199186543475/recommended/2507950">https://steamcommunity.com/profiles/76561199186543475/recommended/2507950</a>
+                    </div>
+                </div>
+<div class="post-item">
+                    <div class="post-header">
+                        <div class="post-title"><a href="https://steamcommunity.com/profiles/76561199237578546/recommended/2507950" target="_blank">小透小锁算绿玩</a></div>
+                        <span class="post-sentiment negative">负面</span>
+                    </div>
+                    <div class="post-summary">小透小锁算绿玩</div>
+                    <div class="post-meta">
+                        <span class="post-source">[Steam]</span>
+                        <span class="post-tag">外挂作弊</span>
+                        <span class="post-metric">游玩h: 2255</span>
+                        <a class="post-url" href="https://steamcommunity.com/profiles/76561199237578546/recommended/2507950" target="_blank" title="https://steamcommunity.com/profiles/76561199237578546/recommended/2507950">https://steamcommunity.com/profiles/76561199237578546/recommended/2507950</a>
+                    </div>
+                </div>
+<div class="post-item">
+                    <div class="post-header">
+                        <div class="post-title"><a href="https://steamcommunity.com/profiles/76561199688272428/recommended/2507950" target="_blank">87568</a></div>
+                        <span class="post-sentiment positive">正面</span>
+                    </div>
+                    <div class="post-summary">87568</div>
+                    <div class="post-meta">
+                        <span class="post-source">[Steam]</span>
+                        
+                        <span class="post-metric">游玩h: 118</span>
+                        <a class="post-url" href="https://steamcommunity.com/profiles/76561199688272428/recommended/2507950" target="_blank" title="https://steamcommunity.com/profiles/76561199688272428/recommended/2507950">https://steamcommunity.com/profiles/76561199688272428/recommended/2507950</a>
+                    </div>
+                </div>
+<div class="post-item">
+                    <div class="post-header">
+                        <div class="post-title"><a href="https://steamcommunity.com/profiles/76561198129863727/recommended/2507950" target="_blank">一点小bug都不能修，还推荐给别人玩，推荐给你妈玩玩看你妈会不会抽你俩大嘴巴子吧策划，跑刀多了杀2个人就要被踢，你是不是...</a></div>
+                        <span class="post-sentiment negative">负面</span>
+                    </div>
+                    <div class="post-summary">一点小bug都不能修，还推荐给别人玩，推荐给你妈玩玩看你妈会不会抽你俩大嘴巴子吧策划，跑刀多了杀2个人就要被踢，你是不是畜生的时候是被踢出来的孤儿啊</div>
+                    <div class="post-meta">
+                        <span class="post-source">[Steam]</span>
+                        <span class="post-tag">运营策略</span><span class="post-tag">设备优化</span>
+                        <span class="post-metric">游玩h: 778</span>
+                        <a class="post-url" href="https://steamcommunity.com/profiles/76561198129863727/recommended/2507950" target="_blank" title="https://steamcommunity.com/profiles/76561198129863727/recommended/2507950">https://steamcommunity.com/profiles/76561198129863727/recommended/2507950</a>
+                    </div>
+                </div>
+<div class="post-item">
+                    <div class="post-header">
+                        <div class="post-title"><a href="https://steamcommunity.com/profiles/76561199447188771/recommended/2507950" target="_blank">辣鸡游戏优化差的一比，还有ACE扫盘给我电脑搞的卡的要死</a></div>
+                        <span class="post-sentiment negative">负面</span>
+                    </div>
+                    <div class="post-summary">辣鸡游戏优化差的一比，还有ACE扫盘给我电脑搞的卡的要死</div>
+                    <div class="post-meta">
+                        <span class="post-source">[Steam]</span>
+                        <span class="post-tag">设备优化</span>
+                        <span class="post-metric">游玩h: 12</span>
+                        <a class="post-url" href="https://steamcommunity.com/profiles/76561199447188771/recommended/2507950" target="_blank" title="https://steamcommunity.com/profiles/76561199447188771/recommended/2507950">https://steamcommunity.com/profiles/76561199447188771/recommended/2507950</a>
+                    </div>
+                </div>
+<div class="post-item">
+                    <div class="post-header">
+                        <div class="post-title"><a href="https://steamcommunity.com/profiles/76561198805390824/recommended/2507950" target="_blank">垃圾</a></div>
+                        <span class="post-sentiment negative">负面</span>
+                    </div>
+                    <div class="post-summary">垃圾</div>
+                    <div class="post-meta">
+                        <span class="post-source">[Steam]</span>
+                        
+                        <span class="post-metric">游玩h: 18</span>
+                        <a class="post-url" href="https://steamcommunity.com/profiles/76561198805390824/recommended/2507950" target="_blank" title="https://steamcommunity.com/profiles/76561198805390824/recommended/2507950">https://steamcommunity.com/profiles/76561198805390824/recommended/2507950</a>
+                    </div>
+                </div>
+<div class="post-item">
+                    <div class="post-header">
+                        <div class="post-title"><a href="https://steamcommunity.com/profiles/76561199697788682/recommended/2507950" target="_blank">FW</a></div>
+                        <span class="post-sentiment negative">负面</span>
+                    </div>
+                    <div class="post-summary">FW</div>
+                    <div class="post-meta">
+                        <span class="post-source">[Steam]</span>
+                        
+                        <span class="post-metric">游玩h: 300</span>
+                        <a class="post-url" href="https://steamcommunity.com/profiles/76561199697788682/recommended/2507950" target="_blank" title="https://steamcommunity.com/profiles/76561199697788682/recommended/2507950">https://steamcommunity.com/profiles/76561199697788682/recommended/2507950</a>
+                    </div>
+                </div>
+<div class="post-item">
+                    <div class="post-header">
+                        <div class="post-title"><a href="https://steamcommunity.com/profiles/76561198848916782/recommended/2507950" target="_blank">like</a></div>
+                        <span class="post-sentiment positive">正面</span>
+                    </div>
+                    <div class="post-summary">like</div>
+                    <div class="post-meta">
+                        <span class="post-source">[Steam]</span>
+                        
+                        <span class="post-metric">游玩h: 5</span>
+                        <a class="post-url" href="https://steamcommunity.com/profiles/76561198848916782/recommended/2507950" target="_blank" title="https://steamcommunity.com/profiles/76561198848916782/recommended/2507950">https://steamcommunity.com/profiles/76561198848916782/recommended/2507950</a>
+                    </div>
+                </div>
+<div class="post-item">
+                    <div class="post-header">
+                        <div class="post-title"><a href="https://steamcommunity.com/profiles/76561198298743465/recommended/2507950" target="_blank">每次跟新后就闪退</a></div>
+                        <span class="post-sentiment negative">负面</span>
+                    </div>
+                    <div class="post-summary">每次跟新后就闪退</div>
+                    <div class="post-meta">
+                        <span class="post-source">[Steam]</span>
+                        <span class="post-tag">设备优化</span>
+                        <span class="post-metric">游玩h: 256</span><span class="post-metric">有用: 1</span>
+                        <a class="post-url" href="https://steamcommunity.com/profiles/76561198298743465/recommended/2507950" target="_blank" title="https://steamcommunity.com/profiles/76561198298743465/recommended/2507950">https://steamcommunity.com/profiles/76561198298743465/recommended/2507950</a>
+                    </div>
+                </div>
+<div class="post-item">
+                    <div class="post-header">
+                        <div class="post-title"><a href="https://steamcommunity.com/profiles/76561198443887580/recommended/2507950" target="_blank">经常闪退</a></div>
+                        <span class="post-sentiment negative">负面</span>
+                    </div>
+                    <div class="post-summary">经常闪退</div>
+                    <div class="post-meta">
+                        <span class="post-source">[Steam]</span>
+                        <span class="post-tag">设备优化</span>
+                        <span class="post-metric">游玩h: 1211</span><span class="post-metric">有用: 1</span>
+                        <a class="post-url" href="https://steamcommunity.com/profiles/76561198443887580/recommended/2507950" target="_blank" title="https://steamcommunity.com/profiles/76561198443887580/recommended/2507950">https://steamcommunity.com/profiles/76561198443887580/recommended/2507950</a>
+                    </div>
+                </div>
+<div class="post-item">
+                    <div class="post-header">
+                        <div class="post-title"><a href="https://steamcommunity.com/profiles/76561199386668361/recommended/2507950" target="_blank">F</a></div>
+                        <span class="post-sentiment negative">负面</span>
+                    </div>
+                    <div class="post-summary">F</div>
+                    <div class="post-meta">
+                        <span class="post-source">[Steam]</span>
+                        
+                        <span class="post-metric">游玩h: 1659</span>
+                        <a class="post-url" href="https://steamcommunity.com/profiles/76561199386668361/recommended/2507950" target="_blank" title="https://steamcommunity.com/profiles/76561199386668361/recommended/2507950">https://steamcommunity.com/profiles/76561199386668361/recommended/2507950</a>
+                    </div>
+                </div>
+<div class="post-item">
+                    <div class="post-header">
+                        <div class="post-title"><a href="https://steamcommunity.com/profiles/76561198886397482/recommended/2507950" target="_blank">垃圾匹配机制</a></div>
+                        <span class="post-sentiment negative">负面</span>
+                    </div>
+                    <div class="post-summary">垃圾匹配机制</div>
+                    <div class="post-meta">
+                        <span class="post-source">[Steam]</span>
+                        <span class="post-tag">匹配机制</span>
+                        <span class="post-metric">游玩h: 1173</span>
+                        <a class="post-url" href="https://steamcommunity.com/profiles/76561198886397482/recommended/2507950" target="_blank" title="https://steamcommunity.com/profiles/76561198886397482/recommended/2507950">https://steamcommunity.com/profiles/76561198886397482/recommended/2507950</a>
+                    </div>
+                </div>
+<div class="post-item">
+                    <div class="post-header">
+                        <div class="post-title"><a href="https://steamcommunity.com/profiles/76561198449014492/recommended/2507950" target="_blank">真几把服了，莫名其妙一直跳cpu虚拟化怎么弄都弄不好，腾讯你不会弄就不要弄，刚刚有点兴趣直接给我按死了，玩你家游戏就图的...</a></div>
+                        <span class="post-sentiment negative">负面</span>
+                    </div>
+                    <div class="post-summary">真几把服了，莫名其妙一直跳cpu虚拟化怎么弄都弄不好，腾讯你不会弄就不要弄，刚刚有点兴趣直接给我按死了，玩你家游戏就图的一个服务器稳定人多，你他妈现在一会ace一会cpu还非要玩家自己弄，cnm的没做好优化就别拿出来强迫玩家自己弄，真的是体验差到不行</div>
+                    <div class="post-meta">
+                        <span class="post-source">[Steam]</span>
+                        <span class="post-tag">设备优化</span>
+                        <span class="post-metric">游玩h: 28</span>
+                        <a class="post-url" href="https://steamcommunity.com/profiles/76561198449014492/recommended/2507950" target="_blank" title="https://steamcommunity.com/profiles/76561198449014492/recommended/2507950">https://steamcommunity.com/profiles/76561198449014492/recommended/2507950</a>
+                    </div>
+                </div>
+<div class="post-item">
+                    <div class="post-header">
+                        <div class="post-title"><a href="https://steamcommunity.com/profiles/76561199800139084/recommended/2507950" target="_blank">登陆报错，老是进不去</a></div>
+                        <span class="post-sentiment negative">负面</span>
+                    </div>
+                    <div class="post-summary">登陆报错，老是进不去</div>
+                    <div class="post-meta">
+                        <span class="post-source">[Steam]</span>
+                        
+                        <span class="post-metric">游玩h: 28</span>
+                        <a class="post-url" href="https://steamcommunity.com/profiles/76561199800139084/recommended/2507950" target="_blank" title="https://steamcommunity.com/profiles/76561199800139084/recommended/2507950">https://steamcommunity.com/profiles/76561199800139084/recommended/2507950</a>
+                    </div>
+                </div>
+<div class="post-item">
+                    <div class="post-header">
+                        <div class="post-title"><a href="https://steamcommunity.com/profiles/76561199098283886/recommended/2507950" target="_blank">构思</a></div>
+                        <span class="post-sentiment negative">负面</span>
+                    </div>
+                    <div class="post-summary">构思</div>
+                    <div class="post-meta">
+                        <span class="post-source">[Steam]</span>
+                        
+                        <span class="post-metric">游玩h: 1018</span>
+                        <a class="post-url" href="https://steamcommunity.com/profiles/76561199098283886/recommended/2507950" target="_blank" title="https://steamcommunity.com/profiles/76561199098283886/recommended/2507950">https://steamcommunity.com/profiles/76561199098283886/recommended/2507950</a>
+                    </div>
+                </div>
+<div class="post-item">
+                    <div class="post-header">
+                        <div class="post-title"><a href="https://steamcommunity.com/profiles/76561199867843533/recommended/2507950" target="_blank">SB</a></div>
+                        <span class="post-sentiment negative">负面</span>
+                    </div>
+                    <div class="post-summary">SB</div>
+                    <div class="post-meta">
+                        <span class="post-source">[Steam]</span>
+                        
+                        <span class="post-metric">游玩h: 1317</span>
+                        <a class="post-url" href="https://steamcommunity.com/profiles/76561199867843533/recommended/2507950" target="_blank" title="https://steamcommunity.com/profiles/76561199867843533/recommended/2507950">https://steamcommunity.com/profiles/76561199867843533/recommended/2507950</a>
+                    </div>
+                </div>
+        </div>
+        <div class="channel-content active" id="channel-TapTap">
+            <div class="channel-header">
+                <h2>TapTap</h2>
+                <div class="channel-stats">
+                    <span>帖子数: 6</span>
+                    <span>正面: 2</span>
+                    <span>负面: 0</span>
+                    <span>较昨日: -</span>
+                </div>
+            </div>
+            <div class="post-item">
+                    <div class="post-header">
+                        <div class="post-title"><a href="https://www.taptap.cn/app/330259/review" target="_blank">干员技能配合与航天基地等地图的战术深度提供了较强的沉浸感，威龙等角色的操作手感及手机端优化也受到好评。在肯定战术博弈乐趣...</a></div>
+                        <span class="post-sentiment positive">正面</span>
+                    </div>
+                    <div class="post-summary">干员技能配合与航天基地等地图的战术深度提供了较强的沉浸感，威龙等角色的操作手感及手机端优化也受到好评。在肯定战术博弈乐趣的同时，部分玩家对近期人机AI的强度表现以及机密模式下的物资爆率有所保留。</div>
+                    <div class="post-meta">
+                        <span class="post-source">[TapTap]</span>
+                        <span class="post-tag">设备优化</span>
+                        
+                        <a class="post-url" href="https://www.taptap.cn/app/330259/review" target="_blank" title="https://www.taptap.cn/app/330259/review">https://www.taptap.cn/app/330259/review</a>
+                    </div>
+                </div>
+<div class="post-item">
+                    <div class="post-header">
+                        <div class="post-title"><a href="https://www.taptap.cn/app/330259/review" target="_blank">作为第一批入坑的玩家真的有太多想吐槽的，我先对想入坑的玩家提4个建议吧， 第一：如果你是一个人我建议找一个固排或者现实中...</a></div>
+                        <span class="post-sentiment neutral">中性</span>
+                    </div>
+                    <div class="post-summary">作为第一批入坑的玩家真的有太多想吐槽的，我先对想入坑的玩家提4个建议吧， 第一：如果你是一个人我建议找一个固排或者现实中找一个朋友一起玩。 第二：3x3任务很麻烦需要花费大量时间可以选择不做或者慢慢做尽力而为就行。 第三：机枪兵，喷火兵，盾兵围着他转圈刀他有烟的话，先往上脸上封烟。记得人机包会出卡，有可能出海洋之类（概率非常低）。 第四：前期一定先升训练中心！后面慢慢升仓库就差不多行了。 最后我吐槽一句，爆率低，强度高。还比较容易进黑屋局。物价不稳定，人机伤害高锁人距离还远。（之前在坝顶被下面人机打）</div>
+                    <div class="post-meta">
+                        <span class="post-source">[TapTap]</span>
+                        <span class="post-tag">经济系统</span>
+                        
+                        <a class="post-url" href="https://www.taptap.cn/app/330259/review" target="_blank" title="https://www.taptap.cn/app/330259/review">https://www.taptap.cn/app/330259/review</a>
+                    </div>
+                </div>
+<div class="post-item">
+                    <div class="post-header">
+                        <div class="post-title"><a href="https://www.taptap.cn/app/330259/review" target="_blank">同意你的说法。S1赛季还是很阴的。</a></div>
+                        <span class="post-sentiment neutral">中性</span>
+                    </div>
+                    <div class="post-summary">同意你的说法。S1赛季还是很阴的。</div>
+                    <div class="post-meta">
+                        <span class="post-source">[TapTap]</span>
+                        <span class="post-tag">活动反馈</span>
+                        
+                        <a class="post-url" href="https://www.taptap.cn/app/330259/review" target="_blank" title="https://www.taptap.cn/app/330259/review">https://www.taptap.cn/app/330259/review</a>
+                    </div>
+                </div>
+<div class="post-item">
+                    <div class="post-header">
+                        <div class="post-title"><a href="https://www.taptap.cn/app/330259/review" target="_blank">一千小时，有发言的基础了吧？ 我来说一下我对这个游戏的看法，好玩吗？好玩，跟朋友一起撤离出来真的很爽，但问题就出在这里，...</a></div>
+                        <span class="post-sentiment positive">正面</span>
+                    </div>
+                    <div class="post-summary">一千小时，有发言的基础了吧？ 我来说一下我对这个游戏的看法，好玩吗？好玩，跟朋友一起撤离出来真的很爽，但问题就出在这里，搜打撤，搜，搜不到好东西，打，三角洲的DTK实在太短，装备差距虽说影响不算太大，但总归还是要有的，打完第一场架就很难就很难再打赢第二场架，这是我感觉的，甲修药什么的都有，但就是大部分时间打不过 我就是一点五KD的那批人，被夹在中间真的很难受，s四赛季入的坑，当时是真的上瘾，一周打了100小时，因为是暑假，所以有时间，可现在呢？ 当时我想要红狼的红皮，等着我最近真的花钱保底出来之后，好像一切都变没有意义了，没有朋友喊我，我根本不想打这个游戏，或许很多人都是因为朋友才继续玩的吧 </div>
+                    <div class="post-meta">
+                        <span class="post-source">[TapTap]</span>
+                        <span class="post-tag">活动反馈</span>
+                        
+                        <a class="post-url" href="https://www.taptap.cn/app/330259/review" target="_blank" title="https://www.taptap.cn/app/330259/review">https://www.taptap.cn/app/330259/review</a>
+                    </div>
+                </div>
+<div class="post-item">
+                    <div class="post-header">
+                        <div class="post-title"><a href="https://www.taptap.cn/app/330259/review" target="_blank">如果有其他游戏可以替代我和我朋友们早退游了</a></div>
+                        <span class="post-sentiment neutral">中性</span>
+                    </div>
+                    <div class="post-summary">如果有其他游戏可以替代我和我朋友们早退游了</div>
+                    <div class="post-meta">
+                        <span class="post-source">[TapTap]</span>
+                        
+                        
+                        <a class="post-url" href="https://www.taptap.cn/app/330259/review" target="_blank" title="https://www.taptap.cn/app/330259/review">https://www.taptap.cn/app/330259/review</a>
+                    </div>
+                </div>
+<div class="post-item">
+                    <div class="post-header">
+                        <div class="post-title"><a href="https://www.taptap.cn/app/330259/review" target="_blank">菜呗，如何你适应了暗区突围在来玩三角洲行动就赢了，加上技术又不好，没时间练枪，身法和意识，要不然每天用一小时来改枪练习，...</a></div>
+                        <span class="post-sentiment neutral">中性</span>
+                    </div>
+                    <div class="post-summary">菜呗，如何你适应了暗区突围在来玩三角洲行动就赢了，加上技术又不好，没时间练枪，身法和意识，要不然每天用一小时来改枪练习，找空闲时间来练不就好了</div>
+                    <div class="post-meta">
+                        <span class="post-source">[TapTap]</span>
+                        
+                        
+                        <a class="post-url" href="https://www.taptap.cn/app/330259/review" target="_blank" title="https://www.taptap.cn/app/330259/review">https://www.taptap.cn/app/330259/review</a>
+                    </div>
+                </div>
+        </div>
+        <div class="channel-content " id="channel-百度贴吧">
+            <div class="channel-header">
+                <h2>百度贴吧</h2>
+                <div class="channel-stats">
+                    <span>帖子数: 3</span>
+                    <span>正面: 0</span>
+                    <span>负面: 2</span>
+                    <span>较昨日: -</span>
+                </div>
+            </div>
+            <div class="post-item">
+                    <div class="post-header">
+                        <div class="post-title"><a href="https://tieba.baidu.com/f?kw=三角洲行动" target="_blank">匹配机制需要优化</a></div>
+                        <span class="post-sentiment negative">负面</span>
+                    </div>
+                    <div class="post-summary">黄金段位匹配到王者对手，根本没法打</div>
+                    <div class="post-meta">
+                        <span class="post-source">[百度贴吧]</span>
+                        <span class="post-tag">匹配机制</span><span class="post-tag">设备优化</span>
+                        <span class="post-metric">评论: 45</span>
+                        <a class="post-url" href="https://tieba.baidu.com/f?kw=三角洲行动" target="_blank" title="https://tieba.baidu.com/f?kw=三角洲行动">https://tieba.baidu.com/f?kw=三角洲行动</a>
+                    </div>
+                </div>
+<div class="post-item">
+                    <div class="post-header">
+                        <div class="post-title"><a href="https://tieba.baidu.com/p/sample1" target="_blank">经济系统贬值太快</a></div>
+                        <span class="post-sentiment negative">负面</span>
+                    </div>
+                    <div class="post-summary">纯币240M的账号现在估计只有500多了</div>
+                    <div class="post-meta">
+                        <span class="post-source">[百度贴吧]</span>
+                        <span class="post-tag">经济系统</span>
+                        <span class="post-metric">评论: 67</span>
+                        <a class="post-url" href="https://tieba.baidu.com/p/sample1" target="_blank" title="https://tieba.baidu.com/p/sample1">https://tieba.baidu.com/p/sample1</a>
+                    </div>
+                </div>
+<div class="post-item">
+                    <div class="post-header">
+                        <div class="post-title"><a href="https://tieba.baidu.com/p/sample2" target="_blank">有没有人一起组队打排位</a></div>
+                        <span class="post-sentiment neutral">中性</span>
+                    </div>
+                    <div class="post-summary">钻石段位求固定队，每天晚上8-11点在线</div>
+                    <div class="post-meta">
+                        <span class="post-source">[百度贴吧]</span>
+                        <span class="post-tag">匹配机制</span><span class="post-tag">社交组队</span>
+                        <span class="post-metric">评论: 12</span>
+                        <a class="post-url" href="https://tieba.baidu.com/p/sample2" target="_blank" title="https://tieba.baidu.com/p/sample2">https://tieba.baidu.com/p/sample2</a>
+                    </div>
+                </div>
+        </div>
+        <div class="channel-content " id="channel-NGA">
+            <div class="channel-header">
+                <h2>NGA</h2>
+                <div class="channel-stats">
+                    <span>帖子数: 3</span>
+                    <span>正面: 1</span>
+                    <span>负面: 1</span>
+                    <span>较昨日: -</span>
+                </div>
+            </div>
+            <div class="post-item">
+                    <div class="post-header">
+                        <div class="post-title"><a href="https://bbs.nga.cn/read.php?tid=sample1" target="_blank">官方听劝改了不少bug</a></div>
+                        <span class="post-sentiment positive">正面</span>
+                    </div>
+                    <div class="post-summary">策划面对面之后确实修了很多问题，好评</div>
+                    <div class="post-meta">
+                        <span class="post-source">[NGA]</span>
+                        <span class="post-tag">运营策略</span><span class="post-tag">设备优化</span>
+                        
+                        <a class="post-url" href="https://bbs.nga.cn/read.php?tid=sample1" target="_blank" title="https://bbs.nga.cn/read.php?tid=sample1">https://bbs.nga.cn/read.php?tid=sample1</a>
+                    </div>
+                </div>
+<div class="post-item">
+                    <div class="post-header">
+                        <div class="post-title"><a href="https://bbs.nga.cn/read.php?tid=sample2" target="_blank">护航灰产什么时候整治</a></div>
+                        <span class="post-sentiment negative">负面</span>
+                    </div>
+                    <div class="post-summary">护航老板逍遥自在，官方却只管盾鼠</div>
+                    <div class="post-meta">
+                        <span class="post-source">[NGA]</span>
+                        <span class="post-tag">外挂作弊</span><span class="post-tag">经济系统</span>
+                        
+                        <a class="post-url" href="https://bbs.nga.cn/read.php?tid=sample2" target="_blank" title="https://bbs.nga.cn/read.php?tid=sample2">https://bbs.nga.cn/read.php?tid=sample2</a>
+                    </div>
+                </div>
+<div class="post-item">
+                    <div class="post-header">
+                        <div class="post-title"><a href="https://bbs.nga.cn/read.php?tid=sample3" target="_blank">新赛季武器平衡性讨论</a></div>
+                        <span class="post-sentiment neutral">中性</span>
+                    </div>
+                    <div class="post-summary">AR-57是不是太强了？其他步枪完全没有出场率</div>
+                    <div class="post-meta">
+                        <span class="post-source">[NGA]</span>
+                        <span class="post-tag">玩法建议</span><span class="post-tag">活动反馈</span>
+                        
+                        <a class="post-url" href="https://bbs.nga.cn/read.php?tid=sample3" target="_blank" title="https://bbs.nga.cn/read.php?tid=sample3">https://bbs.nga.cn/read.php?tid=sample3</a>
+                    </div>
+                </div>
+        </div>
+        <div class="channel-content " id="channel-微博">
+            <div class="channel-header">
+                <h2>微博</h2>
+                <div class="channel-stats">
+                    <span>帖子数: 3</span>
+                    <span>正面: 2</span>
+                    <span>负面: 1</span>
+                    <span>较昨日: -</span>
+                </div>
+            </div>
+            <div class="post-item">
+                    <div class="post-header">
+                        <div class="post-title"><a href="https://weibo.com/sample1" target="_blank">威风的龙火出圈了</a></div>
+                        <span class="post-sentiment positive">正面</span>
+                    </div>
+                    <div class="post-summary">综艺里都出现了三角洲的梗，影响力真大</div>
+                    <div class="post-meta">
+                        <span class="post-source">[微博]</span>
+                        <span class="post-tag">梗文化二创</span><span class="post-tag">跨界联动</span>
+                        <span class="post-metric">赞: 2400</span><span class="post-metric">评论: 180</span>
+                        <a class="post-url" href="https://weibo.com/sample1" target="_blank" title="https://weibo.com/sample1">https://weibo.com/sample1</a>
+                    </div>
+                </div>
+<div class="post-item">
+                    <div class="post-header">
+                        <div class="post-title"><a href="https://weibo.com/sample2" target="_blank">三角洲行动超话热议新联动</a></div>
+                        <span class="post-sentiment positive">正面</span>
+                    </div>
+                    <div class="post-summary">姜文联动皮肤效果曝光，网友热议太有梗了</div>
+                    <div class="post-meta">
+                        <span class="post-source">[微博]</span>
+                        <span class="post-tag">皮肤外观</span><span class="post-tag">梗文化二创</span><span class="post-tag">跨界联动</span>
+                        <span class="post-metric">赞: 1800</span><span class="post-metric">评论: 96</span>
+                        <a class="post-url" href="https://weibo.com/sample2" target="_blank" title="https://weibo.com/sample2">https://weibo.com/sample2</a>
+                    </div>
+                </div>
+<div class="post-item">
+                    <div class="post-header">
+                        <div class="post-title"><a href="https://weibo.com/sample3" target="_blank">玩家集体吐槽外挂不处理</a></div>
+                        <span class="post-sentiment negative">负面</span>
+                    </div>
+                    <div class="post-summary">超话里全是投诉外挂的帖子，官方什么时候回应</div>
+                    <div class="post-meta">
+                        <span class="post-source">[微博]</span>
+                        <span class="post-tag">外挂作弊</span>
+                        <span class="post-metric">赞: 560</span><span class="post-metric">评论: 230</span>
+                        <a class="post-url" href="https://weibo.com/sample3" target="_blank" title="https://weibo.com/sample3">https://weibo.com/sample3</a>
+                    </div>
+                </div>
+        </div>
+        <div class="channel-content " id="channel-微信">
+            <div class="channel-header">
+                <h2>微信</h2>
+                <div class="channel-stats">
+                    <span>帖子数: 3</span>
+                    <span>正面: 2</span>
+                    <span>负面: 0</span>
+                    <span>较昨日: -</span>
+                </div>
+            </div>
+            <div class="post-item">
+                    <div class="post-header">
+                        <div class="post-title"><a href="https://mp.weixin.qq.com/s/sample1" target="_blank">三角洲行动S12赛季全面解读</a></div>
+                        <span class="post-sentiment positive">正面</span>
+                    </div>
+                    <div class="post-summary">新地图、新武器、新活动全攻略，一文看懂赛季更新要点</div>
+                    <div class="post-meta">
+                        <span class="post-source">[微信]</span>
+                        <span class="post-tag">玩法建议</span><span class="post-tag">活动反馈</span>
+                        <span class="post-metric">浏览: 8500</span>
+                        <a class="post-url" href="https://mp.weixin.qq.com/s/sample1" target="_blank" title="https://mp.weixin.qq.com/s/sample1">https://mp.weixin.qq.com/s/sample1</a>
+                    </div>
+                </div>
+<div class="post-item">
+                    <div class="post-header">
+                        <div class="post-title"><a href="https://mp.weixin.qq.com/s/sample2" target="_blank">三角洲行动运营问题深度分析</a></div>
+                        <span class="post-sentiment neutral">中性</span>
+                    </div>
+                    <div class="post-summary">从玩家流失数据看运营策略问题，外挂治理与经济系统需重点关注</div>
+                    <div class="post-meta">
+                        <span class="post-source">[微信]</span>
+                        <span class="post-tag">外挂作弊</span><span class="post-tag">运营策略</span>
+                        <span class="post-metric">浏览: 3200</span>
+                        <a class="post-url" href="https://mp.weixin.qq.com/s/sample2" target="_blank" title="https://mp.weixin.qq.com/s/sample2">https://mp.weixin.qq.com/s/sample2</a>
+                    </div>
+                </div>
+<div class="post-item">
+                    <div class="post-header">
+                        <div class="post-title"><a href="https://mp.weixin.qq.com/s/sample3" target="_blank">新手入门指南2026版</a></div>
+                        <span class="post-sentiment positive">正面</span>
+                    </div>
+                    <div class="post-summary">最全新手攻略，从下载到上钻石一条龙</div>
+                    <div class="post-meta">
+                        <span class="post-source">[微信]</span>
+                        
+                        <span class="post-metric">浏览: 12000</span>
+                        <a class="post-url" href="https://mp.weixin.qq.com/s/sample3" target="_blank" title="https://mp.weixin.qq.com/s/sample3">https://mp.weixin.qq.com/s/sample3</a>
+                    </div>
+                </div>
+        </div>
+        <div class="channel-content " id="channel-抖音">
+            <div class="channel-header">
+                <h2>抖音</h2>
+                <div class="channel-stats">
+                    <span>帖子数: 4</span>
+                    <span>正面: 3</span>
+                    <span>负面: 1</span>
+                    <span>较昨日: -</span>
+                </div>
+            </div>
+            <div class="post-item">
+                    <div class="post-header">
+                        <div class="post-title"><a href="https://v.douyin.com/sample1" target="_blank">猛攻节活动真香</a></div>
+                        <span class="post-sentiment positive">正面</span>
+                    </div>
+                    <div class="post-summary">姜文代言太有梗了，活动奖励也不错</div>
+                    <div class="post-meta">
+                        <span class="post-source">[抖音]</span>
+                        <span class="post-tag">活动反馈</span><span class="post-tag">梗文化二创</span><span class="post-tag">跨界联动</span>
+                        <span class="post-metric">播放: 56000</span><span class="post-metric">赞: 2300</span>
+                        <a class="post-url" href="https://v.douyin.com/sample1" target="_blank" title="https://v.douyin.com/sample1">https://v.douyin.com/sample1</a>
+                    </div>
+                </div>
+<div class="post-item">
+                    <div class="post-header">
+                        <div class="post-title"><a href="https://v.douyin.com/sample2" target="_blank">三角洲行动高光时刻</a></div>
+                        <span class="post-sentiment positive">正面</span>
+                    </div>
+                    <div class="post-summary">1v4极限翻盘，队友都看呆了</div>
+                    <div class="post-meta">
+                        <span class="post-source">[抖音]</span>
+                        <span class="post-tag">社交组队</span>
+                        <span class="post-metric">播放: 89000</span><span class="post-metric">赞: 4500</span>
+                        <a class="post-url" href="https://v.douyin.com/sample2" target="_blank" title="https://v.douyin.com/sample2">https://v.douyin.com/sample2</a>
+                    </div>
+                </div>
+<div class="post-item">
+                    <div class="post-header">
+                        <div class="post-title"><a href="https://v.douyin.com/sample3" target="_blank">三角洲手机版卡顿实测</a></div>
+                        <span class="post-sentiment negative">负面</span>
+                    </div>
+                    <div class="post-summary">中端机实测帧率表现，优化确实需要加强</div>
+                    <div class="post-meta">
+                        <span class="post-source">[抖音]</span>
+                        <span class="post-tag">设备优化</span><span class="post-tag">玩法建议</span>
+                        <span class="post-metric">播放: 23000</span><span class="post-metric">赞: 890</span>
+                        <a class="post-url" href="https://v.douyin.com/sample3" target="_blank" title="https://v.douyin.com/sample3">https://v.douyin.com/sample3</a>
+                    </div>
+                </div>
+<div class="post-item">
+                    <div class="post-header">
+                        <div class="post-title"><a href="https://v.douyin.com/sample4" target="_blank">最帅皮肤搭配推荐</a></div>
+                        <span class="post-sentiment positive">正面</span>
+                    </div>
+                    <div class="post-summary">这三套皮肤组合太帅了，曼德尔砖必抽系列</div>
+                    <div class="post-meta">
+                        <span class="post-source">[抖音]</span>
+                        <span class="post-tag">皮肤外观</span>
+                        <span class="post-metric">播放: 34000</span><span class="post-metric">赞: 1600</span>
+                        <a class="post-url" href="https://v.douyin.com/sample4" target="_blank" title="https://v.douyin.com/sample4">https://v.douyin.com/sample4</a>
+                    </div>
+                </div>
+        </div>
+        <div class="channel-content " id="channel-QQ频道">
+            <div class="channel-header">
+                <h2>QQ频道</h2>
+                <div class="channel-stats">
+                    <span>帖子数: 4</span>
+                    <span>正面: 1</span>
+                    <span>负面: 1</span>
+                    <span>较昨日: -</span>
+                </div>
+            </div>
+            <div class="post-item">
+                    <div class="post-header">
+                        <div class="post-title"><a href="https://pd.qq.com/s/dmtyes81b" target="_blank">找固定队友一起开黑</a></div>
+                        <span class="post-sentiment neutral">中性</span>
+                    </div>
+                    <div class="post-summary">本人钻石段位，找个固定队友每天晚上打</div>
+                    <div class="post-meta">
+                        <span class="post-source">[QQ频道]</span>
+                        <span class="post-tag">匹配机制</span><span class="post-tag">社交组队</span>
+                        
+                        <a class="post-url" href="https://pd.qq.com/s/dmtyes81b" target="_blank" title="https://pd.qq.com/s/dmtyes81b">https://pd.qq.com/s/dmtyes81b</a>
+                    </div>
+                </div>
+<div class="post-item">
+                    <div class="post-header">
+                        <div class="post-title"><a href="https://pd.qq.com/s/sample1" target="_blank">今晚有谁一起打排位赛</a></div>
+                        <span class="post-sentiment neutral">中性</span>
+                    </div>
+                    <div class="post-summary">缺一个辅助位，来个会玩的</div>
+                    <div class="post-meta">
+                        <span class="post-source">[QQ频道]</span>
+                        <span class="post-tag">匹配机制</span><span class="post-tag">社交组队</span>
+                        
+                        <a class="post-url" href="https://pd.qq.com/s/sample1" target="_blank" title="https://pd.qq.com/s/sample1">https://pd.qq.com/s/sample1</a>
+                    </div>
+                </div>
+<div class="post-item">
+                    <div class="post-header">
+                        <div class="post-title"><a href="https://pd.qq.com/s/sample2" target="_blank">新赛季排位上分攻略分享</a></div>
+                        <span class="post-sentiment positive">正面</span>
+                    </div>
+                    <div class="post-summary">分享一套稳定上分的打法思路，亲测有效</div>
+                    <div class="post-meta">
+                        <span class="post-source">[QQ频道]</span>
+                        <span class="post-tag">匹配机制</span><span class="post-tag">活动反馈</span>
+                        
+                        <a class="post-url" href="https://pd.qq.com/s/sample2" target="_blank" title="https://pd.qq.com/s/sample2">https://pd.qq.com/s/sample2</a>
+                    </div>
+                </div>
+<div class="post-item">
+                    <div class="post-header">
+                        <div class="post-title"><a href="https://pd.qq.com/s/sample3" target="_blank">这匹配机制真离谱</a></div>
+                        <span class="post-sentiment negative">负面</span>
+                    </div>
+                    <div class="post-summary">连续5把遇到外挂队，根本没法玩</div>
+                    <div class="post-meta">
+                        <span class="post-source">[QQ频道]</span>
+                        <span class="post-tag">外挂作弊</span><span class="post-tag">匹配机制</span>
+                        
+                        <a class="post-url" href="https://pd.qq.com/s/sample3" target="_blank" title="https://pd.qq.com/s/sample3">https://pd.qq.com/s/sample3</a>
+                    </div>
+                </div>
+        </div>
+
+    <div class="footer">
+        <p>三角洲行动 · 用户声音日报 | 自动生成于 2026/5/15 18:06:38</p>
+        <p>数据来源: 各社区阵地公开信息 | 仅供参考，不作为官方声明</p>
+    </div>
+</div>
+
+<script>
+function switchChannel(name) {
+    document.querySelectorAll('.channel-tab').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('.channel-content').forEach(c => c.classList.remove('active'));
+    document.querySelector('.channel-tab[onclick*="'+name+'"]').classList.add('active');
+    document.getElementById('channel-' + name).classList.add('active');
+}
+function toggleTagDetail(tag) {
+    var detail = document.getElementById('detail-' + tag);
+    var arrow = document.getElementById('arrow-' + tag);
+    if (detail.style.display === 'none' || detail.style.display === '') {
+        detail.style.display = 'block';
+        arrow.classList.add('open');
+    } else {
+        detail.style.display = 'none';
+        arrow.classList.remove('open');
+    }
+}
+function toggleAlertInfo(e) {
+    e.stopPropagation();
+    var tooltip = document.getElementById('alertInfoTooltip');
+    tooltip.classList.toggle('show');
+}
+document.addEventListener('click', function(e) {
+    var tooltip = document.getElementById('alertInfoTooltip');
+    if (tooltip && !tooltip.contains(e.target) && !e.target.classList.contains('info-badge')) {
+        tooltip.classList.remove('show');
+    }
+});
+try {
+    var sc = echarts.init(document.getElementById('sentimentChart'));
+    sc.setOption({tooltip:{trigger:'item',formatter:'{b}: {c} ({d}%)'},series:[{type:'pie',radius:['40%','70%'],center:['50%','50%'],label:{color:'#8B949E',fontSize:12},itemStyle:{borderRadius:6,borderColor:'#1C2128',borderWidth:2},data:[{value:20,name:'正面',itemStyle:{color:'#3FB950'}},{value:25,name:'中性',itemStyle:{color:'#8B949E'}},{value:27,name:'负面',itemStyle:{color:'#F85149'}}]}]});
+} catch(e) { document.getElementById('sentimentChart').innerHTML='<p style="color:#8B949E;text-align:center;padding-top:100px;">图表加载失败（需联网）</p>'; }
+
+try {
+    var tc = echarts.init(document.getElementById('trendChart'));
+    tc.setOption({tooltip:{trigger:'axis'},legend:{data:['总声量','正面','负面'],textStyle:{color:'#8B949E'},top:0},grid:{top:30,right:20,bottom:30,left:50},xAxis:{type:'category',data:["05-15","05-15"],axisLabel:{color:'#8B949E'},axisLine:{lineStyle:{color:'#30363D'}}},yAxis:{type:'value',axisLabel:{color:'#8B949E'},splitLine:{lineStyle:{color:'#30363D'}}},series:[{name:'总声量',type:'line',data:[72,72],smooth:true,lineStyle:{color:'#58A6FF',width:2},itemStyle:{color:'#58A6FF'}},{name:'正面',type:'line',data:[23,20],smooth:true,lineStyle:{color:'#3FB950',width:1.5},itemStyle:{color:'#3FB950'}},{name:'负面',type:'line',data:[27,27],smooth:true,lineStyle:{color:'#F85149',width:1.5},itemStyle:{color:'#F85149'}}]});
+} catch(e) { document.getElementById('trendChart').innerHTML='<p style="color:#8B949E;text-align:center;padding-top:100px;">图表加载失败</p>'; }
+
+window.addEventListener('resize',function(){sc&&sc.resize();tc&&tc.resize();});
+</script>
+</body>
+</html>
